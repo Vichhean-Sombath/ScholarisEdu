@@ -11,7 +11,7 @@ export default function ClassDetailPage() {
   useEffect(() => {
     getClassById(id)
       .then(setCls)
-      .catch(() => setError('Failed to load class details.'))
+      .catch(() => setError('Could not load class details. Please make sure the server is running and try again.'))
       .finally(() => setLoading(false))
   }, [id])
 

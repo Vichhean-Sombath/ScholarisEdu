@@ -17,7 +17,7 @@ export default function AssignmentsPage() {
         setClasses(classesData)
         setAssignments(assignmentsData)
       })
-      .catch(() => setError('Failed to load assignments. Please try again.'))
+      .catch(() => setError('Could not load assignments. Please make sure the server is running and try again.'))
       .finally(() => setLoading(false))
   }, [])
 

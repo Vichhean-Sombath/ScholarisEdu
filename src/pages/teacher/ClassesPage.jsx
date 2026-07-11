@@ -10,7 +10,7 @@ export default function ClassesPage() {
   useEffect(() => {
     getClasses()
       .then(setClasses)
-      .catch(() => setError('Failed to load classes. Please try again.'))
+      .catch(() => setError('Could not load classes. Please make sure the server is running and try again.'))
       .finally(() => setLoading(false))
   }, [])
 

@@ -8,6 +8,7 @@ export default function TeacherHome() {
   const [classes, setClasses] = useState([])
   const [assignments, setAssignments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     Promise.all([getClasses(), getAssignments()])
@@ -15,6 +16,7 @@ export default function TeacherHome() {
         setClasses(classesData)
         setAssignments(assignmentsData)
       })
+      .catch(() => setError('Could not load dashboard data. Please make sure the server is running and try again.'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -33,6 +35,8 @@ export default function TeacherHome() {
 
       {loading ? (
         <p className="status-text">Loading dashboard...</p>
+      ) : error ? (
+        <p className="error-text">{error}</p>
       ) : (
         <>
           <div className="stats-grid">
