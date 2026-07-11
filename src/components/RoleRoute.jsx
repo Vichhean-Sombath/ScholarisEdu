@@ -11,7 +11,7 @@ export default function RoleRoute({ allowedRoles }) {
   }
 
   if (!allowedRoles.includes(user.role)) {
-    return <Navigate to={`/${user.role}`} replace />
+    return <Navigate to={`/${user.role.toLowerCase()}`} replace />
   }
 
   return <Outlet />

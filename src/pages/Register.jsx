@@ -17,6 +17,7 @@ export default function Register() {
     contact_number: '',
     address: '',
     enrollment_date: '',
+    role: 'Student',
   })
   const [errors, setErrors] = useState({})
   const [apiError, setApiError] = useState('')
@@ -31,7 +32,7 @@ export default function Register() {
 
   const validate = () => {
     const next = {}
-    const { username, email, password, confirmPassword, first_name, last_name, enrollment_date } = form
+    const { username, email, password, confirmPassword, first_name, last_name, enrollment_date, role } = form
 
     if (!username.trim()) next.username = 'Username is required'
     else if (username.length > 50) next.username = 'Username must not exceed 50 characters'
@@ -49,6 +50,7 @@ export default function Register() {
     if (!first_name.trim()) next.first_name = 'First name is required'
     if (!last_name.trim()) next.last_name = 'Last name is required'
     if (!enrollment_date) next.enrollment_date = 'Enrollment date is required'
+    if (!role) next.role = 'Role is required'
 
     setErrors(next)
     return Object.keys(next).length === 0
@@ -168,6 +170,16 @@ export default function Register() {
 
           <div className="form-row">
             <div className="form-group">
+              <label htmlFor="role">Role *</label>
+              <select id="role" value={form.role} onChange={(e) => update('role', e.target.value)}>
+                <option value="Student">Student</option>
+                <option value="Teacher">Teacher</option>
+                <option value="Admin">Admin</option>
+              </select>
+              {errors.role && <span className="error-text">{errors.role}</span>}
+            </div>
+
+            <div className="form-group">
               <label htmlFor="gender">Gender</label>
               <select id="gender" value={form.gender} onChange={(e) => update('gender', e.target.value)}>
                 <option value="">Select…</option>
@@ -176,7 +188,9 @@ export default function Register() {
                 <option value="Other">Other</option>
               </select>
             </div>
+          </div>
 
+          <div className="form-row">
             <div className="form-group">
               <label htmlFor="dob">Date of birth</label>
               <input
@@ -184,6 +198,17 @@ export default function Register() {
                 type="date"
                 value={form.dob}
                 onChange={(e) => update('dob', e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="contact_number">Contact number</label>
+              <input
+                id="contact_number"
+                type="tel"
+                value={form.contact_number}
+                onChange={(e) => update('contact_number', e.target.value)}
+                placeholder="+855 12 345 678"
               />
             </div>
           </div>
@@ -201,26 +226,15 @@ export default function Register() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="contact_number">Contact number</label>
+              <label htmlFor="address">Address</label>
               <input
-                id="contact_number"
-                type="tel"
-                value={form.contact_number}
-                onChange={(e) => update('contact_number', e.target.value)}
-                placeholder="+855 12 345 678"
+                id="address"
+                type="text"
+                value={form.address}
+                onChange={(e) => update('address', e.target.value)}
+                placeholder="Your address"
               />
             </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="address">Address</label>
-            <input
-              id="address"
-              type="text"
-              value={form.address}
-              onChange={(e) => update('address', e.target.value)}
-              placeholder="Your address"
-            />
           </div>
 
           <button type="submit" className="btn btn-primary" disabled={submitting}>

@@ -6,6 +6,10 @@ import Login from '../pages/Login'
 import Register from '../pages/Register'
 import AdminDashboard from '../pages/admin/AdminDashboard'
 import TeacherDashboard from '../pages/teacher/TeacherDashboard'
+import TeacherHome from '../pages/teacher/TeacherHome'
+import ClassesPage from '../pages/teacher/ClassesPage'
+import ClassDetailPage from '../pages/teacher/ClassDetailPage'
+import AssignmentsPage from '../pages/teacher/AssignmentsPage'
 import StudentDashboard from '../pages/student/StudentDashboard'
 
 export default function AppRoutes() {
@@ -31,7 +35,12 @@ export default function AppRoutes() {
 
       <Route path="/teacher" element={<ProtectedRoute />}>
         <Route element={<RoleRoute allowedRoles={['Teacher']} />}>
-          <Route index element={<TeacherDashboard />} />
+          <Route element={<TeacherDashboard />}>
+            <Route index element={<TeacherHome />} />
+            <Route path="classes" element={<ClassesPage />} />
+            <Route path="classes/:id" element={<ClassDetailPage />} />
+            <Route path="assignments" element={<AssignmentsPage />} />
+          </Route>
         </Route>
       </Route>
 
@@ -57,5 +66,5 @@ function RoleRedirect() {
   const { user, loading } = useAuth()
   if (loading) return null
   const role = user?.role || 'Student'
-  return <Navigate to={`/${role}`} replace />
+  return <Navigate to={`/${role.toLowerCase()}`} replace />
 }

@@ -20,7 +20,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const isAuthPage = window.location.pathname.startsWith('/login') || window.location.pathname.startsWith('/register')
+    if (error.response?.status === 401 && !isAuthPage) {
       localStorage.removeItem('scholaris_token')
       localStorage.removeItem('scholaris_user')
       window.location.href = '/login'
