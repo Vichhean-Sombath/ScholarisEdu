@@ -34,7 +34,7 @@ export default function ClassDetailPage() {
         <div className="dashboard-card">
           <h4>Gradebook</h4>
           <p>Enter scores and feedback.</p>
-          <span className="meta">Coming soon</span>
+          <Link to="/teacher/gradebook">Open gradebook →</Link>
         </div>
       </div>
     </div>

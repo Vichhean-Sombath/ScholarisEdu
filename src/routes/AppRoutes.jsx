@@ -10,6 +10,8 @@ import TeacherHome from '../pages/teacher/TeacherHome'
 import ClassesPage from '../pages/teacher/ClassesPage'
 import ClassDetailPage from '../pages/teacher/ClassDetailPage'
 import AssignmentsPage from '../pages/teacher/AssignmentsPage'
+import StudentsPage from '../pages/teacher/StudentsPage'
+import GradebookPage from '../pages/teacher/GradebookPage'
 import StudentDashboard from '../pages/student/StudentDashboard'
 
 export default function AppRoutes() {
@@ -39,7 +41,9 @@ export default function AppRoutes() {
             <Route index element={<TeacherHome />} />
             <Route path="classes" element={<ClassesPage />} />
             <Route path="classes/:id" element={<ClassDetailPage />} />
+            <Route path="students" element={<StudentsPage />} />
             <Route path="assignments" element={<AssignmentsPage />} />
+            <Route path="gradebook" element={<GradebookPage />} />
           </Route>
         </Route>
       </Route>

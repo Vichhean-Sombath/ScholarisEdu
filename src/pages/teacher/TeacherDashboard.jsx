@@ -5,7 +5,9 @@ import { useAuth } from '../../context/AuthContext'
 const navItems = [
   { to: '/teacher', end: true, label: 'Dashboard' },
   { to: '/teacher/classes', label: 'My Classes' },
+  { to: '/teacher/students', label: 'Students' },
   { to: '/teacher/assignments', label: 'Assignments' },
+  { to: '/teacher/gradebook', label: 'Gradebook' },
 ]
 
 export default function TeacherDashboard() {
