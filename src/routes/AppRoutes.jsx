@@ -5,6 +5,7 @@ import RoleRoute from '../components/RoleRoute'
 import Login from '../pages/Login'
 import Register from '../pages/Register'
 import AdminDashboard from '../pages/admin/AdminDashboard'
+import AdminHome from '../pages/admin/AdminHome'
 import TeacherDashboard from '../pages/teacher/TeacherDashboard'
 import TeacherHome from '../pages/teacher/TeacherHome'
 import ClassesPage from '../pages/teacher/ClassesPage'
@@ -33,8 +34,10 @@ export default function AppRoutes() {
 
       <Route path="/admin" element={<ProtectedRoute />}>
         <Route element={<RoleRoute allowedRoles={['Admin']} />}>
-          <Route index element={<AdminDashboard />} />
-          <Route path="grading-criteria" element={<AdminGradingCriteriaPage />} />
+          <Route element={<AdminDashboard />}>
+            <Route index element={<AdminHome />} />
+            <Route path="grading-criteria" element={<AdminGradingCriteriaPage />} />
+          </Route>
         </Route>
       </Route>
 

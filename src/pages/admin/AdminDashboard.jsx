@@ -1,39 +1,92 @@
+import { useEffect, useState } from 'react'
+import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { DashboardIcon } from '../../components/Icons'
+
+const navItems = [
+  { to: '/admin', end: true, label: 'Dashboard', icon: DashboardIcon },
+]
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth()
+  const [open, setOpen] = useState(true)
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const toggleSidebar = () => {
+    if (window.innerWidth <= 640) {
+      setMobileOpen((s) => !s)
+    } else {
+      setOpen((s) => !s)
+    }
+  }
+
+  const closeMobileSidebar = () => setMobileOpen(false)
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 640) {
+        setMobileOpen(false)
+      }
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   return (
-    <div className="dashboard">
-      <header className="dashboard-header">
-        <div className="brand">
+    <div className={`dashboard dashboard-with-sidebar ${open ? 'sidebar-open' : 'sidebar-closed'} ${mobileOpen ? 'sidebar-mobile-open' : ''}`}>
+      <button
+        type="button"
+        className="sidebar-toggle"
+        onClick={toggleSidebar}
+        aria-label={open || mobileOpen ? 'Close sidebar' : 'Open sidebar'}
+        aria-expanded={open || mobileOpen}
+      >
+        <span className="burger-line"></span>
+        <span className="burger-line"></span>
+        <span className="burger-line"></span>
+      </button>
+
+      {mobileOpen && <div className="sidebar-backdrop" onClick={closeMobileSidebar} aria-hidden="true" />}
+
+      <aside className="sidebar">
+        <div className="sidebar-brand">
           <div className="brand-logo">S</div>
-          <div className="brand-name">Scholaris Admin</div>
+          <div className="brand-name">
+            Scholaris<span>Admin Portal</span>
+          </div>
         </div>
-        <div className="user-info">
-          <span>{user?.name} <span className="badge">{user?.role}</span></span>
-          <button onClick={logout} className="btn btn-primary" style={{ width: 'auto' }}>Log out</button>
+
+        <nav className="sidebar-nav">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) => (isActive ? 'active nav-link' : 'nav-link')}
+                title={item.label}
+                onClick={closeMobileSidebar}
+              >
+                <Icon size={18} />
+                <span className="nav-full">{item.label}</span>
+                <span className="nav-short">{item.label[0]}</span>
+              </NavLink>
+            )
+          })}
+        </nav>
+
+        <div className="sidebar-footer">
+          <div className="user-info">
+            <span className="user-name">{user?.name}</span>
+            <span className="badge">{user?.role}</span>
+          </div>
+          <button onClick={logout} className="btn btn-primary">Log out</button>
         </div>
-      </header>
+      </aside>
 
       <main className="dashboard-main">
-        <h2>Admin Dashboard</h2>
-        <p>Manage teachers, students, and system settings from here.</p>
-
-        <div className="dashboard-grid">
-          <div className="dashboard-card">
-            <h3>Users</h3>
-            <p>Create and manage teacher and student accounts.</p>
-          </div>
-          <div className="dashboard-card">
-            <h3>Classes</h3>
-            <p>Assign teachers and organize student rosters.</p>
-          </div>
-          <div className="dashboard-card">
-            <h3>Settings</h3>
-            <p>Configure terms, grading scales, and permissions.</p>
-          </div>
-        </div>
+        <Outlet />
       </main>
     </div>
   )
