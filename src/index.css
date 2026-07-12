@@ -106,6 +106,49 @@ a:hover {
   gap: 16px;
 }
 
+.form-row.three-col {
+  grid-template-columns: 1.4fr 1.6fr 0.9fr;
+  align-items: end;
+}
+
+.readonly-field {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  background: #f8fafc;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.search-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.search-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.search-row .btn {
+  width: auto;
+  padding: 12px 18px;
+  flex-shrink: 0;
+}
+
+.btn-secondary {
+  background: #e2e8f0;
+  color: var(--text);
+}
+
+.btn-secondary:hover {
+  background: #cbd5e1;
+}
+
 .error-text {
   color: var(--error);
   font-size: 0.85rem;
@@ -148,6 +191,25 @@ a:hover {
 .btn-primary:disabled {
   background: #94a3b8;
   cursor: not-allowed;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background: #b91d1d;
+}
+
+.btn-sm {
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
 }
 
 .switch-auth {
@@ -778,6 +840,10 @@ a:hover {
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+.score-input:invalid {
+  border-color: var(--error);
+}
+
 .score-input:focus {
   outline: none;
   border-color: var(--accent);
@@ -799,4 +865,51 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+
+.status-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.status-option {
+  padding: 6px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.status-option:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.status-option:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status-option.active {
+  border-color: transparent;
+  color: #fff;
+}
+
+.status-option.present.active {
+  background: var(--success);
+}
+
+.status-option.absent.active {
+  background: var(--error);
+}
+
+.status-option.late.active {
+  background: #d97706;
+}
+
+.status-option.excused.active {
+  background: #64748b;
 }

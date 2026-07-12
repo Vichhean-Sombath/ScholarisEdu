@@ -1,41 +1,113 @@
-import { useEffect, useState } from 'react'
-import { createAssignment, getAssignments, getClasses } from '../../services/teacherService'
+import { useEffect, useMemo, useState } from 'react'
+import {
+  createAssignment,
+  getAssignments,
+  getGradingCriteria,
+  getSchedules,
+} from '../../services/teacherService'
 
 export default function AssignmentsPage() {
-  const [classes, setClasses] = useState([])
+  const [schedules, setSchedules] = useState([])
+  const [criteria, setCriteria] = useState([])
   const [assignments, setAssignments] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [formError, setFormError] = useState('')
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ title: '', classId: '', dueDate: '', status: 'Active' })
+  const [form, setForm] = useState({
+    title: '',
+    scheduleId: '',
+    criteriaId: '',
+    maxScore: 100,
+    dueDate: '',
+  })
 
   useEffect(() => {
-    Promise.all([getClasses(), getAssignments()])
-      .then(([classesData, assignmentsData]) => {
-        setClasses(classesData)
+    Promise.all([getAssignments(), getSchedules(), getGradingCriteria()])
+      .then(([assignmentsData, schedulesData, criteriaData]) => {
         setAssignments(assignmentsData)
+        setSchedules(schedulesData)
+        setCriteria(criteriaData)
       })
       .catch(() => setError('Could not load assignments. Please make sure the server is running and try again.'))
       .finally(() => setLoading(false))
   }, [])
 
-  const className = (id) => classes.find((c) => c.id === Number(id))?.name || 'Unknown class'
+  const selectedSchedule = useMemo(() => {
+    return schedules.find((s) => s.id === Number(form.scheduleId))
+  }, [schedules, form.scheduleId])
+
+  const criteriaUsageForSchedule = useMemo(() => {
+    if (!selectedSchedule) return new Map()
+    const usage = new Map()
+    assignments.forEach((a) => {
+      if (a.scheduleId !== selectedSchedule.id) return
+      usage.set(a.criteriaId, (usage.get(a.criteriaId) || 0) + 1)
+    })
+    return usage
+  }, [assignments, selectedSchedule])
+
+  const criteriaForSchedule = useMemo(() => {
+    if (!selectedSchedule) return []
+    return criteria
+      .filter(
+        (c) =>
+          (c.classId === selectedSchedule.classId || !c.classId) &&
+          (c.subjectId === selectedSchedule.subjectId || !c.subjectId)
+      )
+      .map((c) => {
+        const used = criteriaUsageForSchedule.get(c.id) || 0
+        return { ...c, used, remaining: Math.max(0, Number(c.attemptCount) - used) }
+      })
+  }, [criteria, selectedSchedule, criteriaUsageForSchedule])
+
+  const handleScheduleChange = (scheduleId) => {
+    const schedule = schedules.find((s) => s.id === Number(scheduleId))
+    const matched = schedule
+      ? criteriaForSchedule.find(
+          (c) =>
+            (c.classId === schedule.classId || !c.classId) &&
+            (c.subjectId === schedule.subjectId || !c.subjectId) &&
+            c.remaining > 0
+        )
+      : null
+    setForm((f) => ({
+      ...f,
+      scheduleId,
+      criteriaId: matched ? String(matched.id) : '',
+    }))
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setFormError('')
-    if (!form.title.trim() || !form.classId || !form.dueDate) {
+    const selectedCriteria = criteriaForSchedule.find((c) => c.id === Number(form.criteriaId))
+    if (!form.title.trim() || !form.scheduleId || !form.criteriaId || !form.dueDate) {
       setFormError('Please fill in all fields.')
+      return
+    }
+    if (selectedCriteria && selectedCriteria.remaining === 0) {
+      setFormError(`The selected criteria has already reached its maximum ${selectedCriteria.attemptCount} attempt(s).`)
       return
     }
 
     setSaving(true)
     try {
-      const created = await createAssignment({ ...form, classId: Number(form.classId) })
+      const created = await createAssignment({
+        ...form,
+        scheduleId: Number(form.scheduleId),
+        criteriaId: Number(form.criteriaId),
+        maxScore: Number(form.maxScore),
+      })
       setAssignments((prev) => [...prev, created])
-      setForm({ title: '', classId: '', dueDate: '', status: 'Active' })
+      setForm({
+        title: '',
+        scheduleId: '',
+        criteriaId: '',
+        maxScore: 100,
+        dueDate: '',
+      })
       setShowForm(false)
     } catch {
       setFormError('Failed to save assignment.')
@@ -67,17 +139,49 @@ export default function AssignmentsPage() {
               />
             </div>
             <div className="form-group">
-              <label htmlFor="classId">Class</label>
+              <label htmlFor="scheduleId">Schedule</label>
               <select
-                id="classId"
-                value={form.classId}
-                onChange={(e) => setForm((f) => ({ ...f, classId: e.target.value }))}
+                id="scheduleId"
+                value={form.scheduleId}
+                onChange={(e) => handleScheduleChange(e.target.value)}
               >
-                <option value="">Select a class</option>
-                {classes.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                <option value="">Select a schedule</option>
+                {schedules.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.className} • {s.subjectName} • {s.schedule}
+                  </option>
                 ))}
               </select>
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="criteriaId">Grading Criteria</label>
+              <select
+                id="criteriaId"
+                value={form.criteriaId}
+                onChange={(e) => setForm((f) => ({ ...f, criteriaId: e.target.value }))}
+                disabled={criteriaForSchedule.length === 0}
+              >
+                <option value="">
+                  {criteriaForSchedule.length === 0 ? 'No criteria' : 'Select criteria'}
+                </option>
+                {criteriaForSchedule.map((c) => (
+                  <option key={c.id} value={c.id} disabled={c.remaining === 0}>
+                    {c.name} ({c.weight}%) — {c.used}/{c.attemptCount} used {c.remaining === 0 && '(full)'}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="maxScore">Max Score</label>
+              <input
+                id="maxScore"
+                type="number"
+                min="1"
+                value={form.maxScore}
+                onChange={(e) => setForm((f) => ({ ...f, maxScore: e.target.value }))}
+              />
             </div>
             <div className="form-group">
               <label htmlFor="dueDate">Due Date</label>
@@ -108,6 +212,9 @@ export default function AssignmentsPage() {
             <tr>
               <th>Title</th>
               <th>Class</th>
+              <th>Subject</th>
+              <th>Schedule</th>
+              <th>Max Score</th>
               <th>Due Date</th>
               <th>Status</th>
             </tr>
@@ -116,7 +223,10 @@ export default function AssignmentsPage() {
             {assignments.map((a) => (
               <tr key={a.id}>
                 <td>{a.title}</td>
-                <td>{className(a.classId)}</td>
+                <td>{a.className}</td>
+                <td>{a.subjectName}</td>
+                <td>{a.schedule}</td>
+                <td>{a.maxScore}</td>
                 <td>{a.dueDate}</td>
                 <td>
                   <span className={`pill ${a.status.toLowerCase()}`}>{a.status}</span>

@@ -60,6 +60,8 @@ export const loginUser = async (email, password) => {
       email: data.user.email,
       role: data.user.role,
       status: data.user.status,
+      teacherId: data.user.teacher_id || null,
+      studentId: data.user.student_id || null,
     }
     localStorage.setItem(TOKEN_KEY, data.token)
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser))
@@ -85,6 +87,8 @@ export const registerUser = async (userData) => {
       email: data.user.email,
       role: data.user.role,
       status: data.user.status,
+      teacherId: data.user.teacher_id || null,
+      studentId: data.user.student_id || null,
     }
     localStorage.setItem(TOKEN_KEY, data.token)
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser))

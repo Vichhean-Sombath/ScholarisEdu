@@ -36,6 +36,11 @@ export default function ClassDetailPage() {
           <p>Enter scores and feedback.</p>
           <Link to="/teacher/gradebook">Open gradebook →</Link>
         </div>
+        <div className="dashboard-card">
+          <h4>Attendance</h4>
+          <p>Mark daily attendance for this class.</p>
+          <Link to={`/teacher/attendance?classId=${cls.id}`}>Take attendance →</Link>
+        </div>
       </div>
     </div>
   )

@@ -38,6 +38,10 @@ export default function GradebookPage() {
     return students.filter((s) => s.classId === Number(selectedClassId))
   }, [students, selectedClassId])
 
+  const selectedAssignment = useMemo(() => {
+    return assignments.find((a) => a.id === Number(selectedAssignmentId))
+  }, [assignments, selectedAssignmentId])
+
   useEffect(() => {
     setSaveError('')
     setSaveSuccess('')
@@ -68,6 +72,10 @@ export default function GradebookPage() {
   }
 
   const handleScoreChange = (studentId, value) => {
+    const maxScore = selectedAssignment?.maxScore || 100
+    if (value !== '' && Number(value) > maxScore) {
+      return
+    }
     setScores((prev) => {
       const existing = prev.find((s) => s.studentId === studentId)
       if (existing) {
@@ -90,6 +98,16 @@ export default function GradebookPage() {
     setSaveSuccess('')
     if (!selectedAssignmentId) {
       setSaveError('Please select an assignment.')
+      return
+    }
+
+    const maxScore = selectedAssignment?.maxScore || 100
+    const invalid = classStudents.some((student) => {
+      const value = scoreFor(student.id)
+      return value !== '' && Number(value) > maxScore
+    })
+    if (invalid) {
+      setSaveError(`Scores cannot exceed the maximum score of ${maxScore}.`)
       return
     }
 
@@ -165,7 +183,9 @@ export default function GradebookPage() {
             >
               <option value="">{classAssignments.length === 0 ? 'No assignments' : 'Select an assignment'}</option>
               {classAssignments.map((a) => (
-                <option key={a.id} value={a.id}>{a.title}</option>
+                <option key={a.id} value={a.id}>
+                  {a.title} • {a.subjectName} • {a.schedule} ({a.maxScore} pts)
+                </option>
               ))}
             </select>
           </div>
@@ -188,24 +208,28 @@ export default function GradebookPage() {
           <table className="data-table">
             <thead>
               <tr>
+                <th>Student ID</th>
                 <th>Student</th>
                 <th>Email</th>
+                <th>Assignment</th>
                 <th style={{ width: 160 }}>Score</th>
               </tr>
             </thead>
             <tbody>
               {classStudents.map((student) => (
                 <tr key={student.id}>
+                  <td>{student.id}</td>
                   <td>{student.name}</td>
                   <td>{student.email}</td>
+                  <td>{selectedAssignment?.title}</td>
                   <td>
                     <input
                       type="number"
                       min="0"
-                      max="100"
+                      max={selectedAssignment?.maxScore || 100}
                       value={scoreFor(student.id)}
                       onChange={(e) => handleScoreChange(student.id, e.target.value)}
-                      placeholder="—"
+                      placeholder={`/${selectedAssignment?.maxScore || 100}`}
                       className="score-input"
                     />
                   </td>
