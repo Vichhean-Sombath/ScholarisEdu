@@ -15,6 +15,8 @@ import StudentsPage from '../pages/teacher/StudentsPage'
 import GradebookPage from '../pages/teacher/GradebookPage'
 import AttendancePage from '../pages/teacher/AttendancePage'
 import AdminGradingCriteriaPage from '../pages/admin/AdminGradingCriteriaPage'
+import AdminTeachersPage from '../pages/admin/AdminTeachersPage'
+import AdminStudentsPage from '../pages/admin/AdminStudentsPage'
 import StudentDashboard from '../pages/student/StudentDashboard'
 
 export default function AppRoutes() {
@@ -37,6 +39,8 @@ export default function AppRoutes() {
           <Route element={<AdminDashboard />}>
             <Route index element={<AdminHome />} />
             <Route path="grading-criteria" element={<AdminGradingCriteriaPage />} />
+            <Route path="teachers" element={<AdminTeachersPage />} />
+            <Route path="students" element={<AdminStudentsPage />} />
           </Route>
         </Route>
       </Route>

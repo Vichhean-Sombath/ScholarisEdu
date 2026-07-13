@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { DashboardIcon } from '../../components/Icons'
+import { DashboardIcon, TeacherIcon, StudentIcon } from '../../components/Icons'
 
 const navItems = [
   { to: '/admin', end: true, label: 'Dashboard', icon: DashboardIcon },
+  { to: '/admin/teachers', label: 'Teachers', icon: TeacherIcon },
+  { to: '/admin/students', label: 'Students', icon: StudentIcon },
 ]
 
 export default function AdminDashboard() {

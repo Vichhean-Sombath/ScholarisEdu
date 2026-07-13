@@ -4,7 +4,7 @@ const SESSION_KEY = 'scholaris_user'
 const TOKEN_KEY = 'scholaris_token'
 const MOCK_USERS_KEY = 'scholaris_mock_users'
 
-function getMockUsers() {
+export function getMockUsers() {
   try {
     return JSON.parse(localStorage.getItem(MOCK_USERS_KEY)) || []
   } catch {
@@ -12,7 +12,7 @@ function getMockUsers() {
   }
 }
 
-function setMockUsers(users) {
+export function setMockUsers(users) {
   localStorage.setItem(MOCK_USERS_KEY, JSON.stringify(users))
 }
 
