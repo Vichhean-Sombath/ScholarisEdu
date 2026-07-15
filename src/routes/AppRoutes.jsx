@@ -17,6 +17,9 @@ import AttendancePage from '../pages/teacher/AttendancePage'
 import AdminGradingCriteriaPage from '../pages/admin/AdminGradingCriteriaPage'
 import AdminTeachersPage from '../pages/admin/AdminTeachersPage'
 import AdminStudentsPage from '../pages/admin/AdminStudentsPage'
+import AdminAcademicYearsPage from '../pages/admin/AdminAcademicYearsPage'
+import AdminSemestersPage from '../pages/admin/AdminSemestersPage'
+import AdminClassesPage from '../pages/admin/AdminClassesPage'
 import StudentDashboard from '../pages/student/StudentDashboard'
 
 export default function AppRoutes() {
@@ -41,6 +44,9 @@ export default function AppRoutes() {
             <Route path="grading-criteria" element={<AdminGradingCriteriaPage />} />
             <Route path="teachers" element={<AdminTeachersPage />} />
             <Route path="students" element={<AdminStudentsPage />} />
+            <Route path="academic-years" element={<AdminAcademicYearsPage />} />
+            <Route path="semesters" element={<AdminSemestersPage />} />
+            <Route path="classes" element={<AdminClassesPage />} />
           </Route>
         </Route>
       </Route>
