@@ -20,6 +20,9 @@ import AdminStudentsPage from '../pages/admin/AdminStudentsPage'
 import AdminAcademicYearsPage from '../pages/admin/AdminAcademicYearsPage'
 import AdminSemestersPage from '../pages/admin/AdminSemestersPage'
 import AdminClassesPage from '../pages/admin/AdminClassesPage'
+import AdminFeeStructuresPage from '../pages/admin/AdminFeeStructuresPage'
+import AdminInvoicesPage from '../pages/admin/AdminInvoicesPage'
+import AdminPaymentsPage from '../pages/admin/AdminPaymentsPage'
 import StudentDashboard from '../pages/student/StudentDashboard'
 
 export default function AppRoutes() {
@@ -47,6 +50,9 @@ export default function AppRoutes() {
             <Route path="academic-years" element={<AdminAcademicYearsPage />} />
             <Route path="semesters" element={<AdminSemestersPage />} />
             <Route path="classes" element={<AdminClassesPage />} />
+            <Route path="fee-structures" element={<AdminFeeStructuresPage />} />
+            <Route path="invoices" element={<AdminInvoicesPage />} />
+            <Route path="payments" element={<AdminPaymentsPage />} />
           </Route>
         </Route>
       </Route>
