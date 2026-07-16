@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { AcademicYearIcon, ClassIcon, DashboardIcon, FeeIcon, InvoiceIcon, PaymentIcon, SemesterIcon, StudentIcon, TeacherIcon } from '../../components/Icons'
+import { AcademicYearIcon, CertificateIcon, ClassIcon, DashboardIcon, FeeIcon, GradingCriteriaIcon, InvoiceIcon, PaymentIcon, SemesterIcon, StudentIcon, TeacherIcon } from '../../components/Icons'
 
 const navItems = [
   { to: '/admin', end: true, label: 'Dashboard', icon: DashboardIcon },
   { to: '/admin/academic-years', label: 'Academic Years', icon: AcademicYearIcon },
   { to: '/admin/semesters', label: 'Semesters', icon: SemesterIcon },
   { to: '/admin/classes', label: 'Classes', icon: ClassIcon },
+  { to: '/admin/grading-criteria', label: 'Grading Criteria', icon: GradingCriteriaIcon },
   { to: '/admin/fee-structures', label: 'Fee Structures', icon: FeeIcon },
   { to: '/admin/invoices', label: 'Invoices', icon: InvoiceIcon },
   { to: '/admin/payments', label: 'Payments', icon: PaymentIcon },
+  { to: '/admin/certificates', label: 'Certificates', icon: CertificateIcon },
   { to: '/admin/teachers', label: 'Teachers', icon: TeacherIcon },
   { to: '/admin/students', label: 'Students', icon: StudentIcon },
 ]

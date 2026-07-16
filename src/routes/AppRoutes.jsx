@@ -23,6 +23,7 @@ import AdminClassesPage from '../pages/admin/AdminClassesPage'
 import AdminFeeStructuresPage from '../pages/admin/AdminFeeStructuresPage'
 import AdminInvoicesPage from '../pages/admin/AdminInvoicesPage'
 import AdminPaymentsPage from '../pages/admin/AdminPaymentsPage'
+import AdminCertificatesPage from '../pages/admin/AdminCertificatesPage'
 import StudentDashboard from '../pages/student/StudentDashboard'
 
 export default function AppRoutes() {
@@ -53,6 +54,7 @@ export default function AppRoutes() {
             <Route path="fee-structures" element={<AdminFeeStructuresPage />} />
             <Route path="invoices" element={<AdminInvoicesPage />} />
             <Route path="payments" element={<AdminPaymentsPage />} />
+            <Route path="certificates" element={<AdminCertificatesPage />} />
           </Route>
         </Route>
       </Route>

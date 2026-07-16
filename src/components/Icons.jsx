@@ -104,6 +104,24 @@ export const PaymentIcon = ({ size = 20 }) => (
   </svg>
 )
 
+export const GradingCriteriaIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="9" y1="13" x2="15" y2="13" />
+    <line x1="9" y1="17" x2="13" y2="17" />
+    <line x1="16" y1="13" x2="16" y2="17" />
+    <line x1="17" y1="15" x2="15" y2="15" />
+  </svg>
+)
+
+export const CertificateIcon = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="8" r="6" />
+    <path d="M15.5 13.5L18 22l-6-3-6 3 2.5-8.5" />
+  </svg>
+)
+
 export const EmptyIcon = ({ size = 48 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10" />

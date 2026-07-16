@@ -298,3 +298,40 @@ export const updatePayment = async (payment) => {
 export const deletePayment = async (id) => {
   await api.delete(`/payment/delete/${id}`)
 }
+
+function mapCertificate(item) {
+  const student = item.Student || {}
+  const issuer = item.User || {}
+  return {
+    id: item.certificate_id,
+    studentId: item.student_id,
+    studentName: formatName(student.first_name, student.last_name),
+    certificateType: item.certificate_type,
+    templateUsed: item.template_used || '—',
+    issueDate: formatDate(item.issue_date),
+    generatedFileUrl: item.generated_file_url || '',
+    issuedBy: item.issued_by,
+    issuedByName: issuer.username || '—',
+  }
+}
+
+export const getCertificates = async () => {
+  const { data } = await api.get('/certificate/data')
+  return (data.data || []).map(mapCertificate)
+}
+
+export const createCertificate = async (certificate) => {
+  const { data } = await api.post('/certificate/create', {
+    student_id: Number(certificate.studentId),
+    certificate_type: certificate.certificateType,
+    template_used: certificate.templateUsed || undefined,
+    issue_date: certificate.issueDate,
+    generated_file_url: certificate.generatedFileUrl || undefined,
+    issued_by: Number(certificate.issuedBy),
+  })
+  return mapCertificate(data.data)
+}
+
+export const deleteCertificate = async (id) => {
+  await api.delete(`/certificate/delete/${id}`)
+}
