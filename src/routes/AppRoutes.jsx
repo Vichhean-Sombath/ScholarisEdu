@@ -24,6 +24,11 @@ import AdminFeeStructuresPage from '../pages/admin/AdminFeeStructuresPage'
 import AdminInvoicesPage from '../pages/admin/AdminInvoicesPage'
 import AdminPaymentsPage from '../pages/admin/AdminPaymentsPage'
 import AdminCertificatesPage from '../pages/admin/AdminCertificatesPage'
+import AdminSubjectsPage from '../pages/admin/AdminSubjectsPage'
+import AdminTimeSlotsPage from '../pages/admin/AdminTimeSlotsPage'
+import AdminSchedulesPage from '../pages/admin/AdminSchedulesPage'
+import AdminClassEnrollmentsPage from '../pages/admin/AdminClassEnrollmentsPage'
+import AdminLessonResourcesPage from '../pages/admin/AdminLessonResourcesPage'
 import StudentDashboard from '../pages/student/StudentDashboard'
 
 export default function AppRoutes() {
@@ -51,6 +56,11 @@ export default function AppRoutes() {
             <Route path="academic-years" element={<AdminAcademicYearsPage />} />
             <Route path="semesters" element={<AdminSemestersPage />} />
             <Route path="classes" element={<AdminClassesPage />} />
+            <Route path="subjects" element={<AdminSubjectsPage />} />
+            <Route path="time-slots" element={<AdminTimeSlotsPage />} />
+            <Route path="schedules" element={<AdminSchedulesPage />} />
+            <Route path="class-enrollments" element={<AdminClassEnrollmentsPage />} />
+            <Route path="lesson-resources" element={<AdminLessonResourcesPage />} />
             <Route path="fee-structures" element={<AdminFeeStructuresPage />} />
             <Route path="invoices" element={<AdminInvoicesPage />} />
             <Route path="payments" element={<AdminPaymentsPage />} />

@@ -335,3 +335,232 @@ export const createCertificate = async (certificate) => {
 export const deleteCertificate = async (id) => {
   await api.delete(`/certificate/delete/${id}`)
 }
+
+function mapSubject(item) {
+  const prerequisite = item.Prerequisite || {}
+  return {
+    id: item.subject_id,
+    code: item.subject_code,
+    name: item.subject_name,
+    description: item.description || '',
+    prerequisiteSubjectId: item.prerequisite_subject_id || '',
+    prerequisiteSubjectName: prerequisite.subject_name || '—',
+  }
+}
+
+export const getSubjects = async () => {
+  const { data } = await api.get('/subject/data')
+  return (data.data || []).map(mapSubject)
+}
+
+export const createSubject = async (subject) => {
+  const { data } = await api.post('/subject/create', {
+    subject_code: subject.code,
+    subject_name: subject.name,
+    description: subject.description || undefined,
+    prerequisite_subject_id: subject.prerequisiteSubjectId ? Number(subject.prerequisiteSubjectId) : undefined,
+  })
+  return mapSubject(data.data)
+}
+
+export const updateSubject = async (subject) => {
+  const { data } = await api.put(`/subject/update/${subject.id}`, {
+    subject_code: subject.code,
+    subject_name: subject.name,
+    description: subject.description || undefined,
+    prerequisite_subject_id: subject.prerequisiteSubjectId ? Number(subject.prerequisiteSubjectId) : undefined,
+  })
+  return mapSubject(data.data)
+}
+
+export const deleteSubject = async (id) => {
+  await api.delete(`/subject/delete/${id}`)
+}
+
+function mapTimeSlot(item) {
+  return {
+    id: item.time_slot_id,
+    dayOfWeek: item.day_of_week,
+    startTime: item.start_time ? item.start_time.slice(0, 5) : '',
+    endTime: item.end_time ? item.end_time.slice(0, 5) : '',
+    label: `${item.day_of_week} ${item.start_time?.slice(0, 5)}-${item.end_time?.slice(0, 5)}`,
+  }
+}
+
+export const getTimeSlots = async () => {
+  const { data } = await api.get('/time-slot/data')
+  return (data.data || []).map(mapTimeSlot)
+}
+
+export const createTimeSlot = async (timeSlot) => {
+  const { data } = await api.post('/time-slot/create', {
+    day_of_week: timeSlot.dayOfWeek,
+    start_time: timeSlot.startTime,
+    end_time: timeSlot.endTime,
+  })
+  return mapTimeSlot(data.data)
+}
+
+export const updateTimeSlot = async (timeSlot) => {
+  const { data } = await api.put(`/time-slot/update/${timeSlot.id}`, {
+    day_of_week: timeSlot.dayOfWeek,
+    start_time: timeSlot.startTime,
+    end_time: timeSlot.endTime,
+  })
+  return mapTimeSlot(data.data)
+}
+
+export const deleteTimeSlot = async (id) => {
+  await api.delete(`/time-slot/delete/${id}`)
+}
+
+function mapSchedule(item) {
+  const cls = item.Class || {}
+  const subject = item.Subject || {}
+  const teacher = item.Teacher || {}
+  const timeSlot = item.TimeSlot || {}
+  return {
+    id: item.schedule_id,
+    classId: item.class_id,
+    className: cls.class_name || '—',
+    subjectId: item.subject_id,
+    subjectName: subject.subject_name || '—',
+    teacherId: item.teacher_id,
+    teacherName: formatName(teacher.first_name, teacher.last_name),
+    timeSlotId: item.time_slot_id,
+    timeSlotLabel: timeSlot.day_of_week
+      ? `${timeSlot.day_of_week} ${timeSlot.start_time?.slice(0, 5)}-${timeSlot.end_time?.slice(0, 5)}`
+      : '—',
+    roomNumber: item.room_number || '—',
+  }
+}
+
+export const getSchedules = async () => {
+  const { data } = await api.get('/schedule/data')
+  return (data.data || []).map(mapSchedule)
+}
+
+export const createSchedule = async (schedule) => {
+  const { data } = await api.post('/schedule/create', {
+    class_id: Number(schedule.classId),
+    subject_id: Number(schedule.subjectId),
+    teacher_id: Number(schedule.teacherId),
+    time_slot_id: Number(schedule.timeSlotId),
+    room_number: schedule.roomNumber || undefined,
+  })
+  return mapSchedule(data.data)
+}
+
+export const updateSchedule = async (schedule) => {
+  const { data } = await api.put(`/schedule/update/${schedule.id}`, {
+    class_id: Number(schedule.classId),
+    subject_id: Number(schedule.subjectId),
+    teacher_id: Number(schedule.teacherId),
+    time_slot_id: Number(schedule.timeSlotId),
+    room_number: schedule.roomNumber || undefined,
+  })
+  return mapSchedule(data.data)
+}
+
+export const deleteSchedule = async (id) => {
+  await api.delete(`/schedule/delete/${id}`)
+}
+
+function mapClassEnrollment(item) {
+  const student = item.Student || {}
+  const cls = item.Class || {}
+  return {
+    id: item.enrollment_id,
+    studentId: item.student_id,
+    studentName: formatName(student.first_name, student.last_name),
+    classId: item.class_id,
+    className: cls.class_name || '—',
+    enrollmentDate: formatDate(item.enrollment_date),
+    status: item.status || 'Active',
+  }
+}
+
+export const getClassEnrollments = async () => {
+  const { data } = await api.get('/class-enrollment/data')
+  return (data.data || []).map(mapClassEnrollment)
+}
+
+export const createClassEnrollment = async (enrollment) => {
+  const { data } = await api.post('/class-enrollment/create', {
+    student_id: Number(enrollment.studentId),
+    class_id: Number(enrollment.classId),
+    enrollment_date: enrollment.enrollmentDate,
+    status: enrollment.status || 'Active',
+  })
+  return mapClassEnrollment(data.data)
+}
+
+export const updateClassEnrollment = async (enrollment) => {
+  const { data } = await api.put(`/class-enrollment/update/${enrollment.id}`, {
+    student_id: Number(enrollment.studentId),
+    class_id: Number(enrollment.classId),
+    enrollment_date: enrollment.enrollmentDate,
+    status: enrollment.status || 'Active',
+  })
+  return mapClassEnrollment(data.data)
+}
+
+export const deleteClassEnrollment = async (id) => {
+  await api.delete(`/class-enrollment/delete/${id}`)
+}
+
+const RESOURCE_TYPES = ['LessonPlan', 'Homework', 'Syllabus', 'Other']
+
+function mapLessonResource(item) {
+  const schedule = item.Schedule || {}
+  const teacher = item.Teacher || {}
+  return {
+    id: item.resource_id,
+    teacherId: item.teacher_id,
+    teacherName: formatName(teacher.first_name, teacher.last_name),
+    scheduleId: item.schedule_id || '',
+    scheduleLabel: schedule.schedule_id ? `Schedule #${schedule.schedule_id}` : '—',
+    title: item.title,
+    description: item.description || '',
+    resourceType: item.resource_type,
+    fileUrl: item.file_url || '',
+    uploadDate: formatDate(item.upload_date),
+  }
+}
+
+export const getLessonResources = async () => {
+  const { data } = await api.get('/lesson_resource/data')
+  return (data.data || []).map(mapLessonResource)
+}
+
+export const createLessonResource = async (resource) => {
+  const { data } = await api.post('/lesson_resource/create', {
+    teacher_id: Number(resource.teacherId),
+    schedule_id: resource.scheduleId ? Number(resource.scheduleId) : undefined,
+    title: resource.title,
+    description: resource.description || undefined,
+    resource_type: resource.resourceType,
+    file_url: resource.fileUrl || undefined,
+    upload_date: resource.uploadDate || undefined,
+  })
+  return mapLessonResource(data.data)
+}
+
+export const updateLessonResource = async (resource) => {
+  const { data } = await api.put(`/lesson_resource/update/${resource.id}`, {
+    teacher_id: Number(resource.teacherId),
+    schedule_id: resource.scheduleId ? Number(resource.scheduleId) : undefined,
+    title: resource.title,
+    description: resource.description || undefined,
+    resource_type: resource.resourceType,
+    file_url: resource.fileUrl || undefined,
+    upload_date: resource.uploadDate || undefined,
+  })
+  return mapLessonResource(data.data)
+}
+
+export const deleteLessonResource = async (id) => {
+  await api.delete(`/lesson_resource/delete/${id}`)
+}
+
+export { RESOURCE_TYPES }

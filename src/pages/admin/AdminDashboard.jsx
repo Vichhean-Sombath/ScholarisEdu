@@ -1,13 +1,35 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { AcademicYearIcon, CertificateIcon, ClassIcon, DashboardIcon, FeeIcon, GradingCriteriaIcon, InvoiceIcon, PaymentIcon, SemesterIcon, StudentIcon, TeacherIcon } from '../../components/Icons'
+import {
+  AcademicYearIcon,
+  CertificateIcon,
+  ClassEnrollmentIcon,
+  ClassIcon,
+  DashboardIcon,
+  FeeIcon,
+  GradingCriteriaIcon,
+  InvoiceIcon,
+  LessonResourceIcon,
+  PaymentIcon,
+  ScheduleIcon,
+  SemesterIcon,
+  StudentIcon,
+  SubjectIcon,
+  TeacherIcon,
+  TimeSlotIcon,
+} from '../../components/Icons'
 
 const navItems = [
   { to: '/admin', end: true, label: 'Dashboard', icon: DashboardIcon },
   { to: '/admin/academic-years', label: 'Academic Years', icon: AcademicYearIcon },
   { to: '/admin/semesters', label: 'Semesters', icon: SemesterIcon },
   { to: '/admin/classes', label: 'Classes', icon: ClassIcon },
+  { to: '/admin/subjects', label: 'Subjects', icon: SubjectIcon },
+  { to: '/admin/time-slots', label: 'Time Slots', icon: TimeSlotIcon },
+  { to: '/admin/schedules', label: 'Schedules', icon: ScheduleIcon },
+  { to: '/admin/class-enrollments', label: 'Class Enrollments', icon: ClassEnrollmentIcon },
+  { to: '/admin/lesson-resources', label: 'Lesson Resources', icon: LessonResourceIcon },
   { to: '/admin/grading-criteria', label: 'Grading Criteria', icon: GradingCriteriaIcon },
   { to: '/admin/fee-structures', label: 'Fee Structures', icon: FeeIcon },
   { to: '/admin/invoices', label: 'Invoices', icon: InvoiceIcon },
