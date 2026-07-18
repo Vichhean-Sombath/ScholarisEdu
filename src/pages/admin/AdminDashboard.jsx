@@ -1,42 +1,25 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import {
-  AcademicYearIcon,
-  CertificateIcon,
-  ClassEnrollmentIcon,
-  ClassIcon,
-  DashboardIcon,
-  FeeIcon,
-  GradingCriteriaIcon,
-  InvoiceIcon,
-  LessonResourceIcon,
-  PaymentIcon,
-  ScheduleIcon,
-  SemesterIcon,
-  StudentIcon,
-  SubjectIcon,
-  TeacherIcon,
-  TimeSlotIcon,
-} from '../../components/Icons'
 
 const navItems = [
-  { to: '/admin', end: true, label: 'Dashboard', icon: DashboardIcon },
-  { to: '/admin/academic-years', label: 'Academic Years', icon: AcademicYearIcon },
-  { to: '/admin/semesters', label: 'Semesters', icon: SemesterIcon },
-  { to: '/admin/classes', label: 'Classes', icon: ClassIcon },
-  { to: '/admin/subjects', label: 'Subjects', icon: SubjectIcon },
-  { to: '/admin/time-slots', label: 'Time Slots', icon: TimeSlotIcon },
-  { to: '/admin/schedules', label: 'Schedules', icon: ScheduleIcon },
-  { to: '/admin/class-enrollments', label: 'Class Enrollments', icon: ClassEnrollmentIcon },
-  { to: '/admin/lesson-resources', label: 'Lesson Resources', icon: LessonResourceIcon },
-  { to: '/admin/grading-criteria', label: 'Grading Criteria', icon: GradingCriteriaIcon },
-  { to: '/admin/fee-structures', label: 'Fee Structures', icon: FeeIcon },
-  { to: '/admin/invoices', label: 'Invoices', icon: InvoiceIcon },
-  { to: '/admin/payments', label: 'Payments', icon: PaymentIcon },
-  { to: '/admin/certificates', label: 'Certificates', icon: CertificateIcon },
-  { to: '/admin/teachers', label: 'Teachers', icon: TeacherIcon },
-  { to: '/admin/students', label: 'Students', icon: StudentIcon },
+  { to: '/admin', end: true, label: 'Dashboard' },
+  { to: '/admin/teachers', label: 'Teachers' },
+  { to: '/admin/students', label: 'Students' },
+  { to: '/admin/academic-years', label: 'Academic Years' },
+  { to: '/admin/semesters', label: 'Semesters' },
+  { to: '/admin/subjects', label: 'Subjects' },
+  { to: '/admin/classes', label: 'Classes' },
+  { to: '/admin/time-slots', label: 'Time Slots' },
+  { to: '/admin/schedules', label: 'Schedules' },
+  { to: '/admin/class-enrollments', label: 'Class Enrollments' },
+  { to: '/admin/lesson-resources', label: 'Lesson Resources' },
+  { to: '/admin/grading-criteria', label: 'Grading Criteria' },
+  { to: '/admin/fee-structures', label: 'Fee Structures' },
+  { to: '/admin/invoices', label: 'Invoices' },
+  { to: '/admin/payments', label: 'Payments' },
+  { to: '/admin/certificates', label: 'Certificates' },
+  { to: '/admin/reports', label: 'Reports' },
 ]
 
 export default function AdminDashboard() {
@@ -89,23 +72,19 @@ export default function AdminDashboard() {
         </div>
 
         <nav className="sidebar-nav">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                className={({ isActive }) => (isActive ? 'active nav-link' : 'nav-link')}
-                title={item.label}
-                onClick={closeMobileSidebar}
-              >
-                <Icon size={18} />
-                <span className="nav-full">{item.label}</span>
-                <span className="nav-short">{item.label[0]}</span>
-              </NavLink>
-            )
-          })}
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) => (isActive ? 'active nav-link' : 'nav-link')}
+              title={item.label}
+              onClick={closeMobileSidebar}
+            >
+              <span className="nav-full">{item.label}</span>
+              <span className="nav-short">{item.label[0]}</span>
+            </NavLink>
+          ))}
         </nav>
 
         <div className="sidebar-footer">

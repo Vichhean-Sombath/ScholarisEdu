@@ -175,7 +175,7 @@ export default function AdminClassEnrollmentsPage() {
               >
                 <option value="">Select a student</option>
                 {students.map((student) => (
-                  <option key={student.id} value={student.id}>
+                  <option key={student.profileId} value={student.profileId}>
                     {displayName(student.firstName, student.lastName)} ({student.email})
                   </option>
                 ))}

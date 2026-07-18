@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 import { AlertIcon, EmptyIcon } from '../../components/Icons'
 import {
   createInvoice,
@@ -49,6 +51,95 @@ function displayName(firstName, lastName) {
   return [firstName, lastName].filter(Boolean).join(' ').trim() || '—'
 }
 
+function formatCurrency(value) {
+  return `$${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+function InvoicePrintView({ invoice, onClose, onDownload }) {
+  return (
+    <div className="invoice-print-overlay">
+      <div className="invoice-print-modal">
+        <div className="invoice-print-actions no-print">
+          <button className="btn btn-primary" style={{ width: 'auto' }} onClick={onDownload}>
+            Download PDF
+          </button>
+          <button className="btn btn-secondary" style={{ width: 'auto' }} onClick={onClose}>
+            Close
+          </button>
+        </div>
+
+        <div id="invoice-print-content" className="invoice-print-content">
+          <header className="invoice-print-header">
+            <div>
+              <h2>INVOICE</h2>
+              <p className="invoice-print-meta">{invoice.invoiceNumber}</p>
+            </div>
+            <div className="invoice-print-brand">
+              <div className="brand-logo">S</div>
+              <div>
+                <strong>Scholaris</strong>
+                <br />
+                <span className="invoice-print-meta">School Management System</span>
+              </div>
+            </div>
+          </header>
+
+          <section className="invoice-print-info">
+            <div className="invoice-print-block">
+              <strong>Bill To</strong>
+              <p>{invoice.studentName}</p>
+            </div>
+            <div className="invoice-print-block invoice-print-dates">
+              <div>
+                <span className="invoice-print-label">Issue Date:</span> {invoice.issueDate}
+              </div>
+              <div>
+                <span className="invoice-print-label">Due Date:</span> {invoice.dueDate}
+              </div>
+              <div>
+                <span className="invoice-print-label">Semester:</span> {invoice.semesterName}
+              </div>
+            </div>
+          </section>
+
+          <table className="invoice-print-table">
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th style={{ textAlign: 'right' }}>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{invoice.feeName}</td>
+                <td style={{ textAlign: 'right' }}>{formatCurrency(invoice.totalAmount)}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div className="invoice-print-totals">
+            <div className="invoice-print-total-row">
+              <span>Total</span>
+              <strong>{formatCurrency(invoice.totalAmount)}</strong>
+            </div>
+            <div className="invoice-print-total-row">
+              <span>Amount Paid</span>
+              <strong>{formatCurrency(invoice.amountPaid)}</strong>
+            </div>
+            <div className="invoice-print-total-row invoice-print-balance">
+              <span>Balance Due</span>
+              <strong>{formatCurrency(invoice.totalAmount - invoice.amountPaid)}</strong>
+            </div>
+            <div className="invoice-print-status">
+              Status: <strong>{invoice.status}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function AdminInvoicesPage() {
   const [items, setItems] = useState([])
   const [students, setStudents] = useState([])
@@ -61,6 +152,7 @@ export default function AdminInvoicesPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(emptyForm)
+  const [printInvoice, setPrintInvoice] = useState(null)
 
   useEffect(() => {
     loadItems()
@@ -178,6 +270,24 @@ export default function AdminInvoicesPage() {
     }
   }
 
+  const handleDownloadInvoicePdf = async (invoice) => {
+    const element = document.getElementById('invoice-print-content')
+    if (!element) return
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+    })
+    const imgData = canvas.toDataURL('image/png')
+    const pdf = new jsPDF('p', 'mm', 'a4')
+    const pageWidth = pdf.internal.pageSize.getWidth()
+    const margin = 14
+    const imgWidth = pageWidth - margin * 2
+    const imgHeight = (canvas.height * imgWidth) / canvas.width
+    pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight)
+    pdf.save(`${invoice.invoiceNumber || 'invoice'}.pdf`)
+  }
+
   return (
     <div className="page-section">
       <div className="section-header">
@@ -209,7 +319,7 @@ export default function AdminInvoicesPage() {
               >
                 <option value="">Select a student</option>
                 {students.map((student) => (
-                  <option key={student.id} value={student.id}>
+                  <option key={student.profileId} value={student.profileId}>
                     {displayName(student.firstName, student.lastName)} ({student.email})
                   </option>
                 ))}
@@ -324,6 +434,9 @@ export default function AdminInvoicesPage() {
                       <button className="btn btn-sm btn-secondary" onClick={() => openEdit(item)}>
                         Edit
                       </button>
+                      <button className="btn btn-sm btn-secondary" onClick={() => setPrintInvoice(item)}>
+                        Print
+                      </button>
                       <button className="btn btn-sm btn-danger" onClick={() => handleDelete(item.id)}>
                         Delete
                       </button>
@@ -334,6 +447,14 @@ export default function AdminInvoicesPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {printInvoice && (
+        <InvoicePrintView
+          invoice={printInvoice}
+          onClose={() => setPrintInvoice(null)}
+          onDownload={() => handleDownloadInvoicePdf(printInvoice)}
+        />
       )}
     </div>
   )

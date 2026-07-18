@@ -130,7 +130,11 @@ export default function AdminStudentsPage() {
     if (!form.firstName.trim()) return 'First name is required'
     if (!form.lastName.trim()) return 'Last name is required'
     if (!editingId && !form.password) return 'Password is required'
-    if (form.password && form.password.length < 8) return 'Password must be at least 8 characters'
+    if (form.password) {
+      if (form.password.length < 8) return 'Password must be at least 8 characters'
+      if (!/[A-Z]/.test(form.password)) return 'Password must contain at least one uppercase letter'
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(form.password)) return 'Password must contain at least one special character'
+    }
     if (!editingId && !form.enrollmentDate) return 'Enrollment date is required'
     return ''
   }
@@ -154,8 +158,8 @@ export default function AdminStudentsPage() {
         lastName: form.lastName.trim(),
         role: 'Student',
         status: form.status,
-        gender: form.gender,
-        dob: form.dob,
+        gender: form.gender || undefined,
+        dob: form.dob || undefined,
         contactNumber: form.contactNumber.trim(),
         address: form.address.trim(),
         enrollmentDate: form.enrollmentDate,
@@ -177,7 +181,13 @@ export default function AdminStudentsPage() {
       resetForm()
       setShowForm(false)
     } catch (err) {
-      setFormError(err.message || 'Failed to save student.')
+      const backendErrors = err.response?.data?.errors
+      const message =
+        (Array.isArray(backendErrors) && backendErrors.join(', ')) ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to save student.'
+      setFormError(message)
     } finally {
       setSaving(false)
     }

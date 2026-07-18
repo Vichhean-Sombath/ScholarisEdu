@@ -123,7 +123,13 @@ export default function AdminAcademicYearsPage() {
       resetForm()
       setShowForm(false)
     } catch (err) {
-      setFormError(err.message || 'Failed to save academic year.')
+      const backendErrors = err.response?.data?.errors
+      const message =
+        (Array.isArray(backendErrors) && backendErrors.join(', ')) ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to save academic year.'
+      setFormError(message)
     } finally {
       setSaving(false)
     }
@@ -136,7 +142,13 @@ export default function AdminAcademicYearsPage() {
       await deleteAcademicYear(id)
       setItems((prev) => prev.filter((i) => i.id !== id))
     } catch (err) {
-      setError(err.message || 'Failed to delete academic year.')
+      const backendErrors = err.response?.data?.errors
+      const message =
+        (Array.isArray(backendErrors) && backendErrors.join(', ')) ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to delete academic year.'
+      setError(message)
     }
   }
 

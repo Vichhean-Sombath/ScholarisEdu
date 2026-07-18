@@ -129,7 +129,13 @@ export default function AdminSemestersPage() {
       resetForm()
       setShowForm(false)
     } catch (err) {
-      setFormError(err.message || 'Failed to save semester.')
+      const backendErrors = err.response?.data?.errors
+      const message =
+        (Array.isArray(backendErrors) && backendErrors.join(', ')) ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to save semester.'
+      setFormError(message)
     } finally {
       setSaving(false)
     }
@@ -142,7 +148,13 @@ export default function AdminSemestersPage() {
       await deleteSemester(id)
       setItems((prev) => prev.filter((i) => i.id !== id))
     } catch (err) {
-      setError(err.message || 'Failed to delete semester.')
+      const backendErrors = err.response?.data?.errors
+      const message =
+        (Array.isArray(backendErrors) && backendErrors.join(', ')) ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to delete semester.'
+      setError(message)
     }
   }
 

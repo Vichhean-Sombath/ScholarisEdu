@@ -16,7 +16,6 @@ const emptyForm = {
   subjectId: '',
   teacherId: '',
   timeSlotId: '',
-  roomNumber: '',
 }
 
 function EmptyState({ message = 'No schedules found.' }) {
@@ -96,7 +95,6 @@ export default function AdminSchedulesPage() {
       subjectId: String(item.subjectId),
       teacherId: String(item.teacherId),
       timeSlotId: String(item.timeSlotId),
-      roomNumber: item.roomNumber === '—' ? '' : item.roomNumber,
     })
     setEditingId(item.id)
     setShowForm(true)
@@ -131,7 +129,6 @@ export default function AdminSchedulesPage() {
         subjectId: Number(form.subjectId),
         teacherId: Number(form.teacherId),
         timeSlotId: Number(form.timeSlotId),
-        roomNumber: form.roomNumber.trim(),
       }
 
       if (editingId) {
@@ -144,7 +141,13 @@ export default function AdminSchedulesPage() {
       resetForm()
       setShowForm(false)
     } catch (err) {
-      setFormError(err.message || 'Failed to save schedule.')
+      const backendErrors = err.response?.data?.errors
+      const message =
+        (Array.isArray(backendErrors) && backendErrors.join(', ')) ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to save schedule.'
+      setFormError(message)
     } finally {
       setSaving(false)
     }
@@ -157,7 +160,13 @@ export default function AdminSchedulesPage() {
       await deleteSchedule(id)
       setItems((prev) => prev.filter((i) => i.id !== id))
     } catch (err) {
-      setError(err.message || 'Failed to delete schedule.')
+      const backendErrors = err.response?.data?.errors
+      const message =
+        (Array.isArray(backendErrors) && backendErrors.join(', ')) ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to delete schedule.'
+      setError(message)
     }
   }
 
@@ -235,17 +244,6 @@ export default function AdminSchedulesPage() {
                   </option>
                 ))}
               </select>
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="roomNumber">Room number</label>
-              <input
-                id="roomNumber"
-                value={form.roomNumber}
-                onChange={(e) => updateField('roomNumber', e.target.value)}
-                placeholder="e.g. 101"
-              />
             </div>
           </div>
           <button className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>

@@ -132,7 +132,11 @@ export default function AdminTeachersPage() {
     if (!form.firstName.trim()) return 'First name is required'
     if (!form.lastName.trim()) return 'Last name is required'
     if (!editingId && !form.password) return 'Password is required'
-    if (form.password && form.password.length < 8) return 'Password must be at least 8 characters'
+    if (form.password) {
+      if (form.password.length < 8) return 'Password must be at least 8 characters'
+      if (!/[A-Z]/.test(form.password)) return 'Password must contain at least one uppercase letter'
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(form.password)) return 'Password must contain at least one special character'
+    }
     return ''
   }
 
@@ -155,8 +159,8 @@ export default function AdminTeachersPage() {
         lastName: form.lastName.trim(),
         role: 'Teacher',
         status: form.status,
-        gender: form.gender,
-        dob: form.dob,
+        gender: form.gender || undefined,
+        dob: form.dob || undefined,
         contactNumber: form.contactNumber.trim(),
         specialization: form.specialization.trim(),
         bio: form.bio.trim(),
@@ -179,7 +183,13 @@ export default function AdminTeachersPage() {
       resetForm()
       setShowForm(false)
     } catch (err) {
-      setFormError(err.message || 'Failed to save teacher.')
+      const backendErrors = err.response?.data?.errors
+      const message =
+        (Array.isArray(backendErrors) && backendErrors.join(', ')) ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to save teacher.'
+      setFormError(message)
     } finally {
       setSaving(false)
     }

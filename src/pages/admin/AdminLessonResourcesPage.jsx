@@ -155,7 +155,13 @@ export default function AdminLessonResourcesPage() {
       resetForm()
       setShowForm(false)
     } catch (err) {
-      setFormError(err.message || 'Failed to save lesson resource.')
+      const backendErrors = err.response?.data?.errors
+      const message =
+        (Array.isArray(backendErrors) && backendErrors.join(', ')) ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to save lesson resource.'
+      setFormError(message)
     } finally {
       setSaving(false)
     }
@@ -168,7 +174,13 @@ export default function AdminLessonResourcesPage() {
       await deleteLessonResource(id)
       setItems((prev) => prev.filter((i) => i.id !== id))
     } catch (err) {
-      setError(err.message || 'Failed to delete lesson resource.')
+      const backendErrors = err.response?.data?.errors
+      const message =
+        (Array.isArray(backendErrors) && backendErrors.join(', ')) ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to delete lesson resource.'
+      setError(message)
     }
   }
 

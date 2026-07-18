@@ -29,6 +29,7 @@ import AdminTimeSlotsPage from '../pages/admin/AdminTimeSlotsPage'
 import AdminSchedulesPage from '../pages/admin/AdminSchedulesPage'
 import AdminClassEnrollmentsPage from '../pages/admin/AdminClassEnrollmentsPage'
 import AdminLessonResourcesPage from '../pages/admin/AdminLessonResourcesPage'
+import AdminReportsPage from '../pages/admin/AdminReportsPage'
 import StudentDashboard from '../pages/student/StudentDashboard'
 
 export default function AppRoutes() {
@@ -61,6 +62,7 @@ export default function AppRoutes() {
             <Route path="schedules" element={<AdminSchedulesPage />} />
             <Route path="class-enrollments" element={<AdminClassEnrollmentsPage />} />
             <Route path="lesson-resources" element={<AdminLessonResourcesPage />} />
+            <Route path="reports" element={<AdminReportsPage />} />
             <Route path="fee-structures" element={<AdminFeeStructuresPage />} />
             <Route path="invoices" element={<AdminInvoicesPage />} />
             <Route path="payments" element={<AdminPaymentsPage />} />
