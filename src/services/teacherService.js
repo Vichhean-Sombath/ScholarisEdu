@@ -249,3 +249,105 @@ export const saveAttendance = async (record) => {
     status: payload.status,
   }
 }
+
+export const getTeacherById = async (id) => {
+  const { data } = await api.get(`/teacher/data/${id}`)
+  const user = data.data.User || {}
+  return {
+    id: data.data.teacher_id,
+    userId: user.user_id,
+    username: user.username,
+    email: user.email,
+    role: user.role,
+    status: user.status,
+    firstName: data.data.first_name,
+    lastName: data.data.last_name,
+    fullName: `${data.data.first_name || ''} ${data.data.last_name || ''}`.trim(),
+    gender: data.data.gender,
+    dob: data.data.dob,
+    contactNumber: data.data.contact_number,
+    specialization: data.data.specialization,
+    bio: data.data.bio,
+    hireDate: data.data.hire_date,
+    photoUrl: data.data.photo_url,
+  }
+}
+
+export const updateTeacherProfile = async (id, profile) => {
+  const { data } = await api.put(`/teacher/update/${id}`, {
+    first_name: profile.firstName,
+    last_name: profile.lastName,
+    gender: profile.gender,
+    dob: profile.dob,
+    contact_number: profile.contactNumber,
+    specialization: profile.specialization,
+    bio: profile.bio,
+    hire_date: profile.hireDate,
+  })
+  return data.data
+}
+
+export const getTeacherResources = async () => {
+  const { data } = await api.get('/lesson_resource/data')
+  return (data.data || []).map((item) => ({
+    id: item.resource_id,
+    scheduleId: item.schedule_id,
+    title: item.title,
+    description: item.description,
+    resourceType: item.resource_type,
+    fileUrl: item.file_url,
+    uploadDate: item.upload_date?.slice(0, 10),
+    schedule: item.Schedule ? formatTimeSlot(item.Schedule.TimeSlot) : '—',
+    teacherName: `${item.Teacher?.first_name || ''} ${item.Teacher?.last_name || ''}`.trim(),
+  }))
+}
+
+export const createTeacherResource = async (resource) => {
+  const { data } = await api.post('/lesson_resource/create', {
+    schedule_id: resource.scheduleId || null,
+    title: resource.title,
+    description: resource.description,
+    resource_type: resource.resourceType,
+    file_url: resource.fileUrl,
+    upload_date: resource.uploadDate || new Date().toISOString().slice(0, 10),
+  })
+  const item = data.data
+  return {
+    id: item.resource_id,
+    scheduleId: item.schedule_id,
+    title: item.title,
+    description: item.description,
+    resourceType: item.resource_type,
+    fileUrl: item.file_url,
+    uploadDate: item.upload_date?.slice(0, 10),
+    schedule: item.Schedule ? formatTimeSlot(item.Schedule.TimeSlot) : '—',
+    teacherName: `${item.Teacher?.first_name || ''} ${item.Teacher?.last_name || ''}`.trim(),
+  }
+}
+
+export const updateTeacherResource = async (id, resource) => {
+  const { data } = await api.put(`/lesson_resource/update/${id}`, {
+    schedule_id: resource.scheduleId || null,
+    title: resource.title,
+    description: resource.description,
+    resource_type: resource.resourceType,
+    file_url: resource.fileUrl,
+    upload_date: resource.uploadDate,
+  })
+  const item = data.data
+  return {
+    id: item.resource_id,
+    scheduleId: item.schedule_id,
+    title: item.title,
+    description: item.description,
+    resourceType: item.resource_type,
+    fileUrl: item.file_url,
+    uploadDate: item.upload_date?.slice(0, 10),
+    schedule: item.Schedule ? formatTimeSlot(item.Schedule.TimeSlot) : '—',
+    teacherName: `${item.Teacher?.first_name || ''} ${item.Teacher?.last_name || ''}`.trim(),
+  }
+}
+
+export const deleteTeacherResource = async (id) => {
+  await api.delete(`/lesson_resource/delete/${id}`)
+}

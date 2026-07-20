@@ -48,6 +48,7 @@ export default function AdminFeeStructuresPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [formError, setFormError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(emptyForm)
@@ -73,6 +74,7 @@ export default function AdminFeeStructuresPage() {
     setForm(emptyForm)
     setEditingId(null)
     setFormError('')
+    setSuccessMessage('')
   }
 
   const openNew = () => {
@@ -128,12 +130,23 @@ export default function AdminFeeStructuresPage() {
       if (editingId) {
         const updated = await updateFeeStructure({ id: editingId, ...payload })
         setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        if (updated.invoicesGenerated > 0) {
+          setSuccessMessage(`Updated and generated ${updated.invoicesGenerated} invoice(s) for active students.`)
+        }
       } else {
         const created = await createFeeStructure(payload)
         setItems((prev) => [...prev, created])
+        if (created.invoicesGenerated > 0) {
+          setSuccessMessage(`Created and generated ${created.invoicesGenerated} invoice(s) for active students.`)
+        } else if (payload.classId) {
+          setSuccessMessage('Fee structure created. No active students found to invoice.')
+        } else {
+          setSuccessMessage('Fee structure created.')
+        }
       }
       resetForm()
       setShowForm(false)
+      setTimeout(() => setSuccessMessage(''), 5000)
     } catch (err) {
       setFormError(err.message || 'Failed to save fee structure.')
     } finally {
@@ -160,6 +173,10 @@ export default function AdminFeeStructuresPage() {
           {showForm ? 'Cancel' : 'New Fee Structure'}
         </button>
       </div>
+
+      {successMessage && (
+        <p className="success-text" style={{ marginBottom: 16 }}>{successMessage}</p>
+      )}
 
       {showForm && (
         <form className="panel-form" onSubmit={handleSubmit}>

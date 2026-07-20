@@ -151,6 +151,7 @@ function mapFeeStructure(item) {
     feeName: item.fee_name,
     amount: item.amount,
     dueDate: formatDate(item.due_date),
+    invoicesGenerated: item.invoicesGenerated ?? null,
   }
 }
 

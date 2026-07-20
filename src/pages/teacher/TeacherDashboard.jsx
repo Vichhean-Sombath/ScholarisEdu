@@ -8,6 +8,9 @@ const navItems = [
   { to: '/teacher/students', label: 'Students' },
   { to: '/teacher/assignments', label: 'Assignments' },
   { to: '/teacher/gradebook', label: 'Gradebook' },
+  { to: '/teacher/attendance', label: 'Attendance' },
+  { to: '/teacher/resources', label: 'Resources' },
+  { to: '/teacher/profile', label: 'Profile' },
 ]
 
 export default function TeacherDashboard() {

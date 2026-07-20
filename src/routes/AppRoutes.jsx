@@ -14,6 +14,8 @@ import AssignmentsPage from '../pages/teacher/AssignmentsPage'
 import StudentsPage from '../pages/teacher/StudentsPage'
 import GradebookPage from '../pages/teacher/GradebookPage'
 import AttendancePage from '../pages/teacher/AttendancePage'
+import TeacherProfilePage from '../pages/teacher/TeacherProfilePage'
+import TeacherResourcesPage from '../pages/teacher/TeacherResourcesPage'
 import AdminGradingCriteriaPage from '../pages/admin/AdminGradingCriteriaPage'
 import AdminTeachersPage from '../pages/admin/AdminTeachersPage'
 import AdminStudentsPage from '../pages/admin/AdminStudentsPage'
@@ -31,6 +33,15 @@ import AdminClassEnrollmentsPage from '../pages/admin/AdminClassEnrollmentsPage'
 import AdminLessonResourcesPage from '../pages/admin/AdminLessonResourcesPage'
 import AdminReportsPage from '../pages/admin/AdminReportsPage'
 import StudentDashboard from '../pages/student/StudentDashboard'
+import StudentHome from '../pages/student/StudentHome'
+import StudentClassesPage from '../pages/student/StudentClassesPage'
+import StudentSchedulePage from '../pages/student/StudentSchedulePage'
+import StudentGradesPage from '../pages/student/StudentGradesPage'
+import StudentAttendancePage from '../pages/student/StudentAttendancePage'
+import StudentInvoicesPage from '../pages/student/StudentInvoicesPage'
+import StudentCertificatesPage from '../pages/student/StudentCertificatesPage'
+import StudentResourcesPage from '../pages/student/StudentResourcesPage'
+import StudentProfilePage from '../pages/student/StudentProfilePage'
 
 export default function AppRoutes() {
   return (
@@ -81,13 +92,25 @@ export default function AppRoutes() {
             <Route path="assignments" element={<AssignmentsPage />} />
             <Route path="gradebook" element={<GradebookPage />} />
             <Route path="attendance" element={<AttendancePage />} />
+            <Route path="resources" element={<TeacherResourcesPage />} />
+            <Route path="profile" element={<TeacherProfilePage />} />
           </Route>
         </Route>
       </Route>
 
       <Route path="/student" element={<ProtectedRoute />}>
         <Route element={<RoleRoute allowedRoles={['Student']} />}>
-          <Route index element={<StudentDashboard />} />
+          <Route element={<StudentDashboard />}>
+            <Route index element={<StudentHome />} />
+            <Route path="classes" element={<StudentClassesPage />} />
+            <Route path="schedule" element={<StudentSchedulePage />} />
+            <Route path="grades" element={<StudentGradesPage />} />
+            <Route path="attendance" element={<StudentAttendancePage />} />
+            <Route path="invoices" element={<StudentInvoicesPage />} />
+            <Route path="certificates" element={<StudentCertificatesPage />} />
+            <Route path="resources" element={<StudentResourcesPage />} />
+            <Route path="profile" element={<StudentProfilePage />} />
+          </Route>
         </Route>
       </Route>
 

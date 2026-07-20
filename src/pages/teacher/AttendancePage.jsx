@@ -1,11 +1,58 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { QRCodeSVG } from 'qrcode.react'
 import { getAttendance, getClasses, getSchedules, saveAttendance } from '../../services/teacherService'
 
 const STATUS_OPTIONS = ['Present', 'Absent', 'Late']
+const ATTENDANCE_TOKEN = 'scholaris-attendance-token'
+
+const ICONS = {
+  search: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  ),
+  checkCircle: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+      <polyline points="22 4 12 14.01 9 11.01" />
+    </svg>
+  ),
+  alert: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+  ),
+  users: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  ),
+  calendar: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  ),
+}
 
 function todayString() {
   return new Date().toISOString().slice(0, 10)
+}
+
+function formatDateLabel(dateStr) {
+  if (!dateStr) return '—'
+  const date = new Date(dateStr)
+  if (Number.isNaN(date.getTime())) return dateStr
+  return date.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 }
 
 export default function AttendancePage() {
@@ -148,7 +195,7 @@ export default function AttendancePage() {
       return
     }
 
-    const records = filteredStudents
+    const records = classStudents
       .map((student) => {
         const status = statusFor(student.id)
         if (!status) return null
@@ -185,113 +232,177 @@ export default function AttendancePage() {
     }
   }
 
+  const qrPayload = useMemo(() => {
+    if (!selectedScheduleId || !isToday) return ''
+    return JSON.stringify({
+      scheduleId: Number(selectedScheduleId),
+      date,
+      token: ATTENDANCE_TOKEN,
+    })
+  }, [selectedScheduleId, isToday, date])
+
+  const selectedSchedule = useMemo(() => {
+    return classSchedules.find((s) => s.id === Number(selectedScheduleId))
+  }, [classSchedules, selectedScheduleId])
+
   return (
-    <div className="page-section">
-      <div className="section-header">
+    <div className="page-section attendance-page">
+      <div className="attendance-page-header">
         <div>
           <Link to="/teacher/classes" className="back-link">← Back to classes</Link>
-          <h3>Daily Attendance</h3>
+          <h2>Daily Attendance</h2>
+          <p className="subtitle">Mark attendance for your scheduled class sessions. Students can also check in by scanning the QR code.</p>
         </div>
-        <button
-          className="btn btn-primary"
-          style={{ width: 'auto' }}
-          onClick={handleSave}
-          disabled={saving || !selectedScheduleId || !isToday}
-        >
-          {saving ? 'Saving...' : 'Save Attendance'}
-        </button>
+        <div className="attendance-header-actions">
+          <button
+            className="btn btn-primary attendance-save-btn"
+            onClick={handleSave}
+            disabled={saving || !selectedScheduleId || !isToday}
+          >
+            {saving ? 'Saving...' : 'Save Attendance'}
+          </button>
+        </div>
       </div>
 
-      {saveSuccess && <p className="status-text" style={{ color: 'var(--success)', marginBottom: 12 }}>{saveSuccess}</p>}
-      {saveError && <p className="error-text" style={{ marginBottom: 12 }}>{saveError}</p>}
-
-      <div className="panel-form" style={{ marginBottom: 24 }}>
-        <div className="form-row three-col">
-          <div className="form-group">
-            <label htmlFor="classId">Class</label>
-            <select
-              id="classId"
-              value={selectedClassId}
-              onChange={(e) => {
-                setSelectedClassId(e.target.value)
-                setSearch('')
-              }}
-            >
-              <option value="">Select a class</option>
-              {classes.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label htmlFor="scheduleId">Schedule</label>
-            <select
-              id="scheduleId"
-              value={selectedScheduleId}
-              onChange={(e) => setSelectedScheduleId(e.target.value)}
-              disabled={classSchedules.length === 0}
-            >
-              <option value="">{classSchedules.length === 0 ? 'No schedules' : 'Select a schedule'}</option>
-              {classSchedules.map((s) => (
-                <option key={s.id} value={s.id}>{s.schedule} • {s.subjectName}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Date</label>
-            <div className="readonly-field">{date}</div>
-          </div>
+      {saveSuccess && (
+        <div className="attendance-alert attendance-alert-success">
+          {ICONS.checkCircle}
+          <span>{saveSuccess}</span>
         </div>
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="studentSearch">Search student</label>
-            <div className="search-row">
-              <input
-                id="studentSearch"
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by name or student ID"
-              />
-              {search && (
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setSearch('')}
-                >
-                  Clear
-                </button>
-              )}
+      )}
+      {saveError && (
+        <div className="attendance-alert attendance-alert-error">
+          {ICONS.alert}
+          <span>{saveError}</span>
+        </div>
+      )}
+
+      <div className="attendance-top">
+        <div className="panel-form attendance-controls">
+          <div className="form-row three-col">
+            <div className="form-group">
+              <label htmlFor="classId">Class</label>
+              <select
+                id="classId"
+                value={selectedClassId}
+                onChange={(e) => {
+                  setSelectedClassId(e.target.value)
+                  setSearch('')
+                }}
+              >
+                <option value="">Select a class</option>
+                {classes.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="scheduleId">Schedule</label>
+              <select
+                id="scheduleId"
+                value={selectedScheduleId}
+                onChange={(e) => setSelectedScheduleId(e.target.value)}
+                disabled={classSchedules.length === 0}
+              >
+                <option value="">{classSchedules.length === 0 ? 'No schedules' : 'Select a schedule'}</option>
+                {classSchedules.map((s) => (
+                  <option key={s.id} value={s.id}>{s.schedule} • {s.subjectName}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="studentSearch">Search students</label>
+              <div className="search-row">
+                <span className="search-icon">{ICONS.search}</span>
+                <input
+                  id="studentSearch"
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Name or student ID"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => setSearch('')}
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="form-row two-col attendance-meta-row">
+            <div className="form-group">
+              <label>Date</label>
+              <div className="readonly-field">{formatDateLabel(date)}</div>
+            </div>
+            <div className="form-group">
+              <label>Selected session</label>
+              <div className="readonly-field">
+                {selectedClass?.name || '—'}
+                {selectedSchedule && ` • ${selectedSchedule.schedule}`}
+              </div>
             </div>
           </div>
         </div>
+
+        {isToday && selectedScheduleId && (
+          <div className="attendance-qr-top">
+            <div className="qr-card">
+              <div className="qr-frame">
+                <QRCodeSVG value={qrPayload} size={128} />
+              </div>
+              <div className="qr-info">
+                <p className="qr-title">Scan to check in</p>
+                <p className="qr-count">{attendance.filter((a) => a.status === 'Present').length} of {classStudents.length} checked in</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {loading && <p className="status-text">Loading attendance...</p>}
       {error && <p className="error-text">{error}</p>}
 
       {!loading && !error && classes.length === 0 && (
-        <p className="status-text">You are not assigned to any classes yet.</p>
+        <div className="attendance-empty">
+          <span className="attendance-empty-icon">{ICONS.users}</span>
+          <p>You are not assigned to any classes yet.</p>
+        </div>
       )}
 
       {!loading && !error && selectedClassId && classSchedules.length === 0 && (
-        <p className="status-text">No schedules found for this class.</p>
+        <div className="attendance-empty">
+          <span className="attendance-empty-icon">{ICONS.calendar}</span>
+          <p>No schedules found for this class.</p>
+        </div>
       )}
 
       {!loading && !error && selectedClassId && classSchedules.length > 0 && !selectedScheduleId && (
-        <p className="status-text">Please select a schedule.</p>
+        <div className="attendance-empty">
+          <span className="attendance-empty-icon">{ICONS.calendar}</span>
+          <p>Please select a schedule to start marking attendance.</p>
+        </div>
       )}
 
       {!loading && !error && selectedScheduleId && classStudents.length === 0 && (
-        <p className="status-text">No students are enrolled in this class.</p>
+        <div className="attendance-empty">
+          <span className="attendance-empty-icon">{ICONS.users}</span>
+          <p>No students are enrolled in this class.</p>
+        </div>
       )}
 
       {!loading && !error && selectedScheduleId && classStudents.length > 0 && filteredStudents.length === 0 && search && (
-        <p className="status-text">No students match your search.</p>
+        <div className="attendance-empty">
+          <span className="attendance-empty-icon">{ICONS.search}</span>
+          <p>No students match your search.</p>
+        </div>
       )}
 
       {!loading && !error && selectedScheduleId && filteredStudents.length > 0 && (
-        <div className="data-table-wrapper">
+        <div className="data-table-wrapper attendance-table">
           <table className="data-table">
             <thead>
               <tr>
@@ -304,22 +415,27 @@ export default function AttendancePage() {
             <tbody>
               {filteredStudents.map((student) => (
                 <tr key={student.id}>
-                  <td>{student.studentIdLabel}</td>
-                  <td>{student.name}</td>
+                  <td className="attendance-student-id">{student.studentIdLabel}</td>
+                  <td className="attendance-student-name">{student.name}</td>
                   <td>{student.email}</td>
                   <td>
-                    <div className="status-options">
-                      {STATUS_OPTIONS.map((status) => (
-                        <button
-                          key={status}
-                          type="button"
-                          disabled={!isToday}
-                          className={`status-option ${status.toLowerCase()} ${statusFor(student.id) === status ? 'active' : ''}`}
-                          onClick={() => handleStatusChange(student.id, status)}
-                        >
-                          {status}
-                        </button>
-                      ))}
+                    <div className="attendance-status-simple" role="group" aria-label={`Attendance status for ${student.name}`}>
+                      {STATUS_OPTIONS.map((status) => {
+                        const active = statusFor(student.id) === status
+                        return (
+                          <button
+                            key={status}
+                            type="button"
+                            role="radio"
+                            aria-checked={active}
+                            disabled={!isToday}
+                            className={`attendance-status-simple-btn ${status.toLowerCase()} ${active ? 'active' : ''}`}
+                            onClick={() => handleStatusChange(student.id, status)}
+                          >
+                            {status}
+                          </button>
+                        )
+                      })}
                     </div>
                   </td>
                 </tr>
