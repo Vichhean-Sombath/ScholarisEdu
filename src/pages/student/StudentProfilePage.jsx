@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getStudentProfile } from '../../services/studentService'
+import { changePassword, getStudentProfile } from '../../services/studentService'
 import {
   PageHeader,
   DashboardSkeleton,
@@ -22,6 +22,10 @@ export default function StudentProfilePage() {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const [password, setPassword] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
 
   const loadProfile = () => {
     setLoading(true)
@@ -36,9 +40,96 @@ export default function StudentProfilePage() {
     loadProfile()
   }, [])
 
+  const handlePasswordChange = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    if (password.newPassword !== password.confirmPassword) {
+      setError('New password and confirmation do not match.')
+      return
+    }
+
+    const minLength = password.newPassword.length >= 8
+    const hasUpper = /[A-Z]/.test(password.newPassword)
+    const hasLower = /[a-z]/.test(password.newPassword)
+    const hasDigit = /\d/.test(password.newPassword)
+    const hasSpecial = /[!@#$%^&*(),.?\":{}|<>]/.test(password.newPassword)
+    if (!minLength || !hasUpper || !hasLower || !hasDigit || !hasSpecial) {
+      setError('Password must be at least 8 characters with uppercase, lowercase, number, and special character.')
+      return
+    }
+
+    setSaving(true)
+    try {
+      await changePassword({ currentPassword: password.currentPassword, newPassword: password.newPassword })
+      setSuccess('Password changed successfully.')
+      setPassword({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      setShowPasswordForm(false)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to change password. Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="page-section">
       <PageHeader title="My Profile" subtitle="Your personal information and emergency contacts." />
+
+      {success && !loading && <p className="success-text" style={{ marginBottom: 16 }}>{success}</p>}
+      {error && !loading && <p className="error-text" style={{ marginBottom: 16 }}>{error}</p>}
+
+      <div className="page-header" style={{ marginTop: 16 }}>
+        <div />
+        <button
+          className="btn btn-secondary"
+          style={{ width: 'auto' }}
+          onClick={() => setShowPasswordForm((s) => !s)}
+        >
+          {showPasswordForm ? 'Cancel' : 'Change Password'}
+        </button>
+      </div>
+
+      {showPasswordForm && (
+        <form className="panel-form" onSubmit={handlePasswordChange}>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="currentPassword">Current Password</label>
+              <input
+                id="currentPassword"
+                type="password"
+                value={password.currentPassword}
+                onChange={(e) => setPassword((p) => ({ ...p, currentPassword: e.target.value }))}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="newPassword">New Password</label>
+              <input
+                id="newPassword"
+                type="password"
+                value={password.newPassword}
+                onChange={(e) => setPassword((p) => ({ ...p, newPassword: e.target.value }))}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="confirmPassword">Confirm New Password</label>
+              <input
+                id="confirmPassword"
+                type="password"
+                value={password.confirmPassword}
+                onChange={(e) => setPassword((p) => ({ ...p, confirmPassword: e.target.value }))}
+                required
+              />
+            </div>
+          </div>
+          <button className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>
+            {saving ? 'Saving...' : 'Update Password'}
+          </button>
+        </form>
+      )}
 
       {loading ? (
         <DashboardSkeleton />

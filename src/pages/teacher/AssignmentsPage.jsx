@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   createAssignment,
   getAssignments,
@@ -38,40 +38,34 @@ export default function AssignmentsPage() {
     return schedules.find((s) => s.id === Number(form.scheduleId))
   }, [schedules, form.scheduleId])
 
-  const criteriaUsageForSchedule = useMemo(() => {
-    if (!selectedSchedule) return new Map()
+  const getCriteriaForSchedule = useCallback((schedule) => {
+    if (!schedule) return []
     const usage = new Map()
     assignments.forEach((a) => {
-      if (a.scheduleId !== selectedSchedule.id) return
+      if (a.scheduleId !== schedule.id) return
       usage.set(a.criteriaId, (usage.get(a.criteriaId) || 0) + 1)
     })
-    return usage
-  }, [assignments, selectedSchedule])
-
-  const criteriaForSchedule = useMemo(() => {
-    if (!selectedSchedule) return []
     return criteria
       .filter(
         (c) =>
-          (c.classId === selectedSchedule.classId || !c.classId) &&
-          (c.subjectId === selectedSchedule.subjectId || !c.subjectId)
+          (c.classId === schedule.classId || !c.classId) &&
+          (c.subjectId === schedule.subjectId || !c.subjectId)
       )
       .map((c) => {
-        const used = criteriaUsageForSchedule.get(c.id) || 0
+        const used = usage.get(c.id) || 0
         return { ...c, used, remaining: Math.max(0, Number(c.attemptCount) - used) }
       })
-  }, [criteria, selectedSchedule, criteriaUsageForSchedule])
+  }, [criteria, assignments])
+
+  const criteriaForSchedule = useMemo(
+    () => getCriteriaForSchedule(selectedSchedule),
+    [getCriteriaForSchedule, selectedSchedule]
+  )
 
   const handleScheduleChange = (scheduleId) => {
     const schedule = schedules.find((s) => s.id === Number(scheduleId))
-    const matched = schedule
-      ? criteriaForSchedule.find(
-          (c) =>
-            (c.classId === schedule.classId || !c.classId) &&
-            (c.subjectId === schedule.subjectId || !c.subjectId) &&
-            c.remaining > 0
-        )
-      : null
+    const available = getCriteriaForSchedule(schedule)
+    const matched = available.find((c) => c.remaining > 0) || null
     setForm((f) => ({
       ...f,
       scheduleId,
@@ -87,7 +81,11 @@ export default function AssignmentsPage() {
       setFormError('Please fill in all fields.')
       return
     }
-    if (selectedCriteria && selectedCriteria.remaining === 0) {
+    if (!selectedCriteria) {
+      setFormError('Please select a valid grading criteria for this schedule.')
+      return
+    }
+    if (selectedCriteria.remaining === 0) {
       setFormError(`The selected criteria has already reached its maximum ${selectedCriteria.attemptCount} attempt(s).`)
       return
     }
@@ -109,8 +107,9 @@ export default function AssignmentsPage() {
         dueDate: '',
       })
       setShowForm(false)
-    } catch {
-      setFormError('Failed to save assignment.')
+    } catch (err) {
+      console.error('Failed to save assignment:', err)
+      setFormError(err.response?.data?.message || err.message || 'Failed to save assignment.')
     } finally {
       setSaving(false)
     }

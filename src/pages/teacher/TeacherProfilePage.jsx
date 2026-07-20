@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { getTeacherById, updateTeacherProfile } from '../../services/teacherService'
+import { changePassword, getTeacherById, updateTeacherProfile } from '../../services/teacherService'
 
 function InfoItem({ label, value }) {
   return (
@@ -19,6 +19,8 @@ export default function TeacherProfilePage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [isEditing, setIsEditing] = useState(false)
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const [password, setPassword] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
 
   const teacherId = user?.teacherId || user?.profileId
 
@@ -52,8 +54,41 @@ export default function TeacherProfilePage() {
       await updateTeacherProfile(teacherId, profile)
       setSuccess('Profile updated successfully.')
       setIsEditing(false)
-    } catch {
-      setError('Failed to update profile. Please try again.')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update profile. Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    if (password.newPassword !== password.confirmPassword) {
+      setError('New password and confirmation do not match.')
+      return
+    }
+
+    const minLength = password.newPassword.length >= 8
+    const hasUpper = /[A-Z]/.test(password.newPassword)
+    const hasLower = /[a-z]/.test(password.newPassword)
+    const hasDigit = /\d/.test(password.newPassword)
+    const hasSpecial = /[!@#$%^&*(),.?\":{}|<>]/.test(password.newPassword)
+    if (!minLength || !hasUpper || !hasLower || !hasDigit || !hasSpecial) {
+      setError('Password must be at least 8 characters with uppercase, lowercase, number, and special character.')
+      return
+    }
+
+    setSaving(true)
+    try {
+      await changePassword({ currentPassword: password.currentPassword, newPassword: password.newPassword })
+      setSuccess('Password changed successfully.')
+      setPassword({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      setShowPasswordForm(false)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to change password. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -82,6 +117,57 @@ export default function TeacherProfilePage() {
 
       {success && <p className="success-text" style={{ marginBottom: 16 }}>{success}</p>}
       {isEditing && error && <p className="error-text" style={{ marginBottom: 16 }}>{error}</p>}
+
+      <div className="page-header" style={{ marginTop: 16 }}>
+        <div />
+        <button
+          className="btn btn-secondary"
+          style={{ width: 'auto' }}
+          onClick={() => setShowPasswordForm((s) => !s)}
+        >
+          {showPasswordForm ? 'Cancel' : 'Change Password'}
+        </button>
+      </div>
+
+      {showPasswordForm && (
+        <form className="panel-form" onSubmit={handlePasswordChange}>
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="currentPassword">Current Password</label>
+              <input
+                id="currentPassword"
+                type="password"
+                value={password.currentPassword}
+                onChange={(e) => setPassword((p) => ({ ...p, currentPassword: e.target.value }))}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="newPassword">New Password</label>
+              <input
+                id="newPassword"
+                type="password"
+                value={password.newPassword}
+                onChange={(e) => setPassword((p) => ({ ...p, newPassword: e.target.value }))}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="confirmPassword">Confirm New Password</label>
+              <input
+                id="confirmPassword"
+                type="password"
+                value={password.confirmPassword}
+                onChange={(e) => setPassword((p) => ({ ...p, confirmPassword: e.target.value }))}
+                required
+              />
+            </div>
+          </div>
+          <button className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>
+            {saving ? 'Saving...' : 'Update Password'}
+          </button>
+        </form>
+      )}
 
       <div className="profile-card">
         <div className="profile-header">

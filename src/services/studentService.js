@@ -45,6 +45,14 @@ export const getStudentProfile = async () => {
   return data.data
 }
 
+export const changePassword = async ({ currentPassword, newPassword }) => {
+  const { data } = await api.put('/user/change-password', {
+    currentPassword,
+    newPassword,
+  })
+  return data.data
+}
+
 export const payInvoiceWithStripe = async (invoiceId, { successUrl, cancelUrl } = {}) => {
   const { data } = await api.post('/payment/stripe/checkout', {
     invoice_id: invoiceId,

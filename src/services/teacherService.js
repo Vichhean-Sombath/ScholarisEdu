@@ -287,6 +287,14 @@ export const updateTeacherProfile = async (id, profile) => {
   return data.data
 }
 
+export const changePassword = async ({ currentPassword, newPassword }) => {
+  const { data } = await api.put('/user/change-password', {
+    currentPassword,
+    newPassword,
+  })
+  return data.data
+}
+
 export const getTeacherResources = async () => {
   const { data } = await api.get('/lesson_resource/data')
   return (data.data || []).map((item) => ({
