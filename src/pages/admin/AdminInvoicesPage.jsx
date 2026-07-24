@@ -75,7 +75,7 @@ function InvoicePrintView({ invoice, onClose, onDownload }) {
               <p className="invoice-print-meta">{invoice.invoiceNumber}</p>
             </div>
             <div className="invoice-print-brand">
-              <div className="brand-logo">S</div>
+              <img className="brand-logo" src="/logo.webp" alt="Scholaris" />
               <div>
                 <strong>Scholaris</strong>
                 <br />

@@ -34,7 +34,7 @@ export default function StudentDashboard() {
 
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <div className="brand-logo">S</div>
+          <img className="brand-logo" src="/logo.webp" alt="Scholaris" />
           <div className="brand-name">Scholaris<span>Student Portal</span></div>
         </div>
 

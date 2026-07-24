@@ -470,12 +470,8 @@ a:hover {
   height: 36px;
   background: var(--primary);
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-weight: 700;
-  font-size: 1.1rem;
+  display: block;
+  object-fit: contain;
 }
 
 .brand-name {
@@ -852,10 +848,8 @@ a:hover {
 
 .sidebar-brand .brand-logo {
   background: #fff;
-  color: var(--primary);
   width: 40px;
   height: 40px;
-  font-size: 1.25rem;
   flex-shrink: 0;
   opacity: 1;
   transition: opacity 0.2s ease;
@@ -1496,12 +1490,9 @@ input[type="number"] {
   width: 40px;
   height: 40px;
   background: var(--primary);
-  color: #fff;
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
+  display: block;
+  object-fit: contain;
   font-size: 1.25rem;
 }
 

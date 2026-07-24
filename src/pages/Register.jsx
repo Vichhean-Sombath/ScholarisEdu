@@ -170,7 +170,7 @@ export default function Register() {
     <div className="auth-page register-page">
       <div className="auth-card">
         <div className="brand">
-          <div className="brand-logo">S</div>
+          <img className="brand-logo" src="/logo.webp" alt="Scholaris" />
           <div className="brand-name">Scholaris</div>
         </div>
 
