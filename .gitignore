@@ -50,6 +50,14 @@ desktop.ini
 coverage
 *.lcov
 
+# Lint / type cache
+.eslintcache
+*.tsbuildinfo
+
+# Deploy platforms
+.vercel
+.netlify
+
 # Temporary files
 *.tmp
 *.temp

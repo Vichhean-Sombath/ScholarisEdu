@@ -68,6 +68,7 @@ export default function AttendancePage() {
   const [selectedClassId, setSelectedClassId] = useState('')
   const [selectedScheduleId, setSelectedScheduleId] = useState('')
   const [search, setSearch] = useState('')
+  const [dirtyStudentIds, setDirtyStudentIds] = useState(new Set())
   const date = todayString()
   const paramClassId = searchParams.get('classId')
 
@@ -101,6 +102,7 @@ export default function AttendancePage() {
     setSaveSuccess('')
     setSelectedScheduleId('')
     setAttendance([])
+    setDirtyStudentIds(new Set())
   }, [selectedClassId])
 
   useEffect(() => {
@@ -149,10 +151,37 @@ export default function AttendancePage() {
       setAttendance([])
       return
     }
-    getAttendance(selectedScheduleId, date)
-      .then(setAttendance)
-      .catch(() => setAttendance([]))
-  }, [selectedScheduleId, date])
+
+    const load = () => {
+      getAttendance(selectedScheduleId, date)
+        .then((records) => {
+          setAttendance((prev) => {
+            const localMap = new Map(prev.map((a) => [a.studentId, a]))
+            records.forEach((serverRecord) => {
+              if (!dirtyStudentIds.has(serverRecord.studentId)) {
+                localMap.set(serverRecord.studentId, serverRecord)
+              }
+            })
+            return Array.from(localMap.values())
+          })
+        })
+        .catch(() => {
+          // Keep existing state on polling failures to avoid wiping teacher's work.
+        })
+    }
+
+    load()
+    const interval = setInterval(load, 5000)
+    const onVisible = () => {
+      if (!document.hidden) load()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [selectedScheduleId, date, dirtyStudentIds])
 
   const statusFor = (studentId) => {
     const record = attendance.find((a) => a.studentId === studentId)
@@ -179,6 +208,11 @@ export default function AttendancePage() {
           status,
         },
       ]
+    })
+    setDirtyStudentIds((prev) => {
+      const next = new Set(prev)
+      next.add(studentId)
+      return next
     })
     setSaveSuccess('')
   }
@@ -224,6 +258,7 @@ export default function AttendancePage() {
         })
         return Array.from(map.values())
       })
+      setDirtyStudentIds(new Set())
       setSaveSuccess('Attendance saved successfully.')
     } catch {
       setSaveError('Failed to save attendance. Please make sure the server is running and try again.')

@@ -150,7 +150,14 @@ export default function StudentInvoicesPage() {
     setPayingInvoiceId(invoice.invoiceId)
     try {
       const result = await payInvoiceWithBakong(invoice.invoiceId)
-      const qrString = result?.qrString || result?.qr_string
+      const qrString =
+        result?.qrString ||
+        result?.qr_string ||
+        result?.qrCode ||
+        result?.qr_code ||
+        result?.khqr ||
+        result?.qr ||
+        (typeof result === 'string' ? result : '')
       if (qrString) {
         setBakongModal({
           open: true,
@@ -159,7 +166,7 @@ export default function StudentInvoicesPage() {
           amount: invoice.balanceDue || invoice.totalAmount || 0,
         })
       } else {
-        setError('Bakong QR generation did not return a code.')
+        setError(`Bakong QR generation did not return a code. ${result?.message || JSON.stringify(result)}`)
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Could not generate Bakong QR.')

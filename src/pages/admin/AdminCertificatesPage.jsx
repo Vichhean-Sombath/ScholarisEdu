@@ -1,17 +1,22 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { AlertIcon, EmptyIcon } from '../../components/Icons'
 import { createCertificate, deleteCertificate, getCertificates } from '../../services/adminService'
 import { getStudents } from '../../services/userService'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
+import CertificateTemplate from '../../components/CertificateTemplate'
 
 const CERTIFICATE_TYPES = ['Completion', 'Transcript', 'Recommendation']
 
 const emptyForm = {
   studentId: '',
   certificateType: 'Completion',
-  templateUsed: '',
+  templateUsed: 'Scholaris Default',
   issueDate: '',
   generatedFileUrl: '',
+  schoolName: 'Scholaris School',
+  signature: 'School Principal',
 }
 
 function EmptyState({ message = 'No certificates found.' }) {
@@ -51,10 +56,18 @@ export default function AdminCertificatesPage() {
   const [formError, setFormError] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(emptyForm)
+  const [generating, setGenerating] = useState(false)
+  const previewRef = useRef(null)
 
   useEffect(() => {
     loadItems()
   }, [])
+
+  useEffect(() => {
+    if (showForm && !form.issueDate) {
+      setForm((prev) => ({ ...prev, issueDate: new Date().toISOString().slice(0, 10) }))
+    }
+  }, [showForm])
 
   const loadItems = () => {
     setLoading(true)
@@ -80,6 +93,47 @@ export default function AdminCertificatesPage() {
 
   const updateField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const selectedStudent = students.find((s) => String(s.profileId) === form.studentId)
+  const studentDisplayName = selectedStudent
+    ? displayName(selectedStudent.firstName, selectedStudent.lastName)
+    : 'Student Name'
+
+  const generatePDF = async () => {
+    const validationError = validate()
+    if (validationError) {
+      setFormError(validationError)
+      return null
+    }
+
+    const element = previewRef.current
+    if (!element) return null
+
+    setGenerating(true)
+    try {
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true })
+      const imgData = canvas.toDataURL('image/png')
+
+      const pdf = new jsPDF('landscape', 'px', 'a4')
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
+      return pdf
+    } catch (err) {
+      setFormError(err.message || 'Failed to generate certificate PDF.')
+      return null
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const handleDownload = async () => {
+    const pdf = await generatePDF()
+    if (!pdf) return
+    const fileName = `${studentDisplayName.replace(/\s+/g, '_')}_${form.certificateType}_certificate.pdf`
+    pdf.save(fileName)
   }
 
   const validate = () => {
@@ -116,7 +170,7 @@ export default function AdminCertificatesPage() {
         certificateType: form.certificateType,
         templateUsed: form.templateUsed.trim(),
         issueDate: form.issueDate,
-        generatedFileUrl: form.generatedFileUrl.trim(),
+        generatedFileUrl: form.generatedFileUrl.trim() || undefined,
         issuedBy: user?.user_id,
       })
       setItems((prev) => [created, ...prev])
@@ -199,20 +253,59 @@ export default function AdminCertificatesPage() {
             </div>
           </div>
           <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="schoolName">School name</label>
+              <input
+                id="schoolName"
+                value={form.schoolName}
+                onChange={(e) => updateField('schoolName', e.target.value)}
+                placeholder="Scholaris School"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="signature">Authorized signature</label>
+              <input
+                id="signature"
+                value={form.signature}
+                onChange={(e) => updateField('signature', e.target.value)}
+                placeholder="School Principal"
+              />
+            </div>
+          </div>
+          <div className="form-row">
             <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-              <label htmlFor="generatedFileUrl">Generated file URL</label>
+              <label htmlFor="generatedFileUrl">Generated file URL (optional)</label>
               <input
                 id="generatedFileUrl"
                 type="url"
                 value={form.generatedFileUrl}
                 onChange={(e) => updateField('generatedFileUrl', e.target.value)}
-                placeholder="https://example.com/certificates/file.pdf"
+                placeholder="External PDF URL only; leave blank if downloading locally"
               />
             </div>
           </div>
-          <button className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>
-            {saving ? 'Saving...' : 'Issue Certificate'}
-          </button>
+
+          <div className="certificate-preview-wrapper" style={{ marginTop: 24, marginBottom: 24 }}>
+            <p className="status-text" style={{ marginBottom: 12 }}>Preview</p>
+            <div ref={previewRef}>
+              <CertificateTemplate
+                studentName={studentDisplayName}
+                certificateType={form.certificateType}
+                issueDate={form.issueDate}
+                schoolName={form.schoolName}
+                signature={form.signature}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <button className="btn btn-secondary" style={{ width: 'auto' }} type="button" onClick={handleDownload} disabled={generating}>
+              {generating ? 'Generating...' : 'Download PDF'}
+            </button>
+            <button className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>
+              {saving ? 'Saving...' : 'Issue Certificate'}
+            </button>
+          </div>
         </form>
       )}
 
