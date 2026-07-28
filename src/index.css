@@ -229,7 +229,7 @@ a:hover {
 
 .form-row {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 12px;
   margin-bottom: 12px;
 }
@@ -449,6 +449,11 @@ a:hover {
 .action-buttons {
   display: flex;
   gap: 8px;
+}
+
+.action-buttons .btn {
+  width: auto;
+  flex: 0 0 auto;
 }
 
 .switch-auth {
