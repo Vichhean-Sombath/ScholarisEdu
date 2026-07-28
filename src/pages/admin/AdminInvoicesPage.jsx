@@ -5,6 +5,8 @@ import { AlertIcon, EmptyIcon } from '../../components/Icons'
 import {
   createInvoice,
   deleteInvoice,
+  getClassEnrollments,
+  getClassesAdmin,
   getFeeStructures,
   getInvoices,
   getSemesters,
@@ -144,14 +146,23 @@ function InvoicePrintView({ invoice, onClose, onDownload }) {
 export default function AdminInvoicesPage() {
   const [items, setItems] = useState([])
   const [students, setStudents] = useState([])
+  const [classes, setClasses] = useState([])
+  const [enrollments, setEnrollments] = useState([])
   const [fees, setFees] = useState([])
   const [semesters, setSemesters] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [mode, setMode] = useState('single')
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(emptyForm)
+  const [bulkForm, setBulkForm] = useState({
+    classId: '',
+    feeId: '',
+    semesterId: '',
+    dueDate: '',
+  })
   const [printInvoice, setPrintInvoice] = useState(null)
 
   useEffect(() => {
@@ -161,10 +172,19 @@ export default function AdminInvoicesPage() {
   const loadItems = () => {
     setLoading(true)
     setError('')
-    Promise.all([getInvoices(), getStudents(), getFeeStructures(), getSemesters()])
-      .then(([invoicesData, studentsData, feesData, semestersData]) => {
+    Promise.all([
+      getInvoices(),
+      getStudents(),
+      getClassesAdmin(),
+      getClassEnrollments(),
+      getFeeStructures(),
+      getSemesters(),
+    ])
+      .then(([invoicesData, studentsData, classesData, enrollmentsData, feesData, semestersData]) => {
         setItems(invoicesData)
         setStudents(studentsData)
+        setClasses(classesData)
+        setEnrollments(enrollmentsData)
         setFees(feesData)
         setSemesters(semestersData)
       })
@@ -172,13 +192,22 @@ export default function AdminInvoicesPage() {
       .finally(() => setLoading(false))
   }
 
+  const today = () => new Date().toISOString().slice(0, 10)
+
   const resetForm = () => {
     setForm(emptyForm)
     setEditingId(null)
   }
 
+  const resetBulkForm = () => {
+    setBulkForm({ classId: '', feeId: '', semesterId: '', dueDate: '' })
+  }
+
   const openNew = () => {
     resetForm()
+    resetBulkForm()
+    setMode('single')
+    setForm((prev) => ({ ...prev, invoiceNumber: generateInvoiceNumber() }))
     setShowForm(true)
   }
 
@@ -202,8 +231,26 @@ export default function AdminInvoicesPage() {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
+  const updateBulkField = (field, value) => {
+    setBulkForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const getNextInvoiceNumber = () => {
+    const prefix = 'SC-'
+    const existing = items
+      .map((i) => i.invoiceNumber)
+      .filter((n) => n?.startsWith(prefix))
+      .map((n) => Number(n.slice(prefix.length)))
+      .filter((n) => !Number.isNaN(n))
+    return existing.length > 0 ? Math.max(...existing) + 1 : 1
+  }
+
+  const generateInvoiceNumber = () => {
+    const next = getNextInvoiceNumber()
+    return `SC-${String(next).padStart(6, '0')}`
+  }
+
   const validate = () => {
-    if (!form.invoiceNumber.trim()) return 'Invoice number is required.'
     if (!form.studentId) return 'Student is required.'
     if (!form.feeId) return 'Fee structure is required.'
     if (!form.semesterId) return 'Semester is required.'
@@ -215,6 +262,14 @@ export default function AdminInvoicesPage() {
     if (form.amountPaid !== '' && (Number.isNaN(Number(form.amountPaid)) || Number(form.amountPaid) < 0)) {
       return 'Amount paid must be a non-negative number.'
     }
+    return ''
+  }
+
+  const validateBulk = () => {
+    if (!bulkForm.classId) return 'Class is required.'
+    if (!bulkForm.feeId) return 'Fee structure is required.'
+    if (!bulkForm.semesterId) return 'Semester is required.'
+    if (!bulkForm.dueDate) return 'Due date is required.'
     return ''
   }
 
@@ -230,7 +285,7 @@ export default function AdminInvoicesPage() {
     setSaving(true)
     try {
       const payload = {
-        invoiceNumber: form.invoiceNumber.trim(),
+        invoiceNumber: form.invoiceNumber.trim() || generateInvoiceNumber(),
         studentId: Number(form.studentId),
         feeId: Number(form.feeId),
         semesterId: Number(form.semesterId),
@@ -253,6 +308,73 @@ export default function AdminInvoicesPage() {
       setShowForm(false)
     } catch (err) {
       toastError(err.message || 'Failed to save invoice.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleBulkSubmit = async (e) => {
+    e.preventDefault()
+
+    const validationError = validateBulk()
+    if (validationError) {
+      toastError(validationError)
+      return
+    }
+
+    const fee = fees.find((f) => String(f.id) === String(bulkForm.feeId))
+    if (!fee) {
+      toastError('Selected fee structure not found.')
+      return
+    }
+
+    const studentsInClass = enrollments
+      .filter((e) => String(e.classId) === String(bulkForm.classId))
+      .map((e) => students.find((s) => String(s.profileId) === String(e.studentId) && s.status === 'Active'))
+      .filter(Boolean)
+
+    if (studentsInClass.length === 0) {
+      toastError('No active students found in this class.')
+      return
+    }
+
+    setSaving(true)
+    const issueDate = today()
+    const nextBase = getNextInvoiceNumber()
+    let success = 0
+    let failed = 0
+
+    try {
+      for (let i = 0; i < studentsInClass.length; i++) {
+        const student = studentsInClass[i]
+        const invoiceNumber = `SC-${String(nextBase + i).padStart(6, '0')}`
+        try {
+          await createInvoice({
+            invoiceNumber,
+            studentId: Number(student.profileId),
+            feeId: Number(bulkForm.feeId),
+            semesterId: Number(bulkForm.semesterId),
+            issueDate,
+            dueDate: bulkForm.dueDate,
+            totalAmount: fee.amount,
+            amountPaid: 0,
+          })
+          success++
+        } catch {
+          failed++
+        }
+      }
+
+      await loadItems()
+      if (failed > 0) {
+        toastError(`Generated ${success} invoice(s). ${failed} failed.`)
+      } else {
+        toastSuccess(`Generated ${success} invoice(s) for ${studentsInClass.length} student(s).`)
+      }
+      resetBulkForm()
+      setShowForm(false)
+    } catch (err) {
+      toastError(err.message || 'Failed to generate invoices.')
     } finally {
       setSaving(false)
     }
@@ -298,96 +420,174 @@ export default function AdminInvoicesPage() {
       </div>
 
       {showForm && (
-        <form className="panel-form" onSubmit={handleSubmit}>
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="invoiceNumber">Invoice number *</label>
-              <input
-                id="invoiceNumber"
-                value={form.invoiceNumber}
-                onChange={(e) => updateField('invoiceNumber', e.target.value)}
-                placeholder="e.g. INV-0001"
-              />
+        <form className="panel-form" onSubmit={mode === 'bulk' && !editingId ? handleBulkSubmit : handleSubmit}>
+          {!editingId && (
+            <div className="form-row" style={{ marginBottom: 16 }}>
+              <div className="form-group">
+                <label>Mode</label>
+                <div className="action-buttons">
+                  <button
+                    type="button"
+                    className={`btn btn-sm ${mode === 'single' ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => setMode('single')}
+                    disabled={saving}
+                  >
+                    Single Student
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn btn-sm ${mode === 'bulk' ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => setMode('bulk')}
+                    disabled={saving}
+                  >
+                    Generate for Class
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="form-group">
-              <label htmlFor="studentId">Student *</label>
-              <select
-                id="studentId"
-                value={form.studentId}
-                onChange={(e) => updateField('studentId', e.target.value)}
-              >
-                <option value="">Select a student</option>
-                {students.map((student) => (
-                  <option key={student.profileId} value={student.profileId}>
-                    {displayName(student.firstName, student.lastName)} ({student.email})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="feeId">Fee structure *</label>
-              <select id="feeId" value={form.feeId} onChange={(e) => updateField('feeId', e.target.value)}>
-                <option value="">Select a fee structure</option>
-                {fees.map((fee) => (
-                  <option key={fee.id} value={fee.id}>
-                    {fee.feeName} - ${Number(fee.amount).toFixed(2)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label htmlFor="semesterId">Semester *</label>
-              <select id="semesterId" value={form.semesterId} onChange={(e) => updateField('semesterId', e.target.value)}>
-                <option value="">Select a semester</option>
-                {semesters.map((semester) => (
-                  <option key={semester.id} value={semester.id}>
-                    {semester.semesterName} ({semester.academicYearName})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="issueDate">Issue date *</label>
-              <input id="issueDate" type="date" value={form.issueDate} onChange={(e) => updateField('issueDate', e.target.value)} />
-            </div>
-            <div className="form-group">
-              <label htmlFor="dueDate">Due date *</label>
-              <input id="dueDate" type="date" value={form.dueDate} onChange={(e) => updateField('dueDate', e.target.value)} />
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="totalAmount">Total amount *</label>
-              <input
-                id="totalAmount"
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.totalAmount}
-                onChange={(e) => updateField('totalAmount', e.target.value)}
-                placeholder="e.g. 150.00"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="amountPaid">Amount paid</label>
-              <input
-                id="amountPaid"
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.amountPaid}
-                onChange={(e) => updateField('amountPaid', e.target.value)}
-                placeholder="e.g. 0.00"
-              />
-            </div>
-          </div>
-          <button className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>
-            {saving ? 'Saving...' : editingId ? 'Update Invoice' : 'Save Invoice'}
-          </button>
+          )}
+
+          {mode === 'bulk' && !editingId ? (
+            <>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="bulkClassId">Class *</label>
+                  <select id="bulkClassId" value={bulkForm.classId} onChange={(e) => updateBulkField('classId', e.target.value)}>
+                    <option value="">Select a class</option>
+                    {classes.map((cls) => (
+                      <option key={cls.id} value={cls.id}>
+                        {cls.className} ({cls.academicYearName})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="bulkFeeId">Fee structure *</label>
+                  <select id="bulkFeeId" value={bulkForm.feeId} onChange={(e) => updateBulkField('feeId', e.target.value)}>
+                    <option value="">Select a fee structure</option>
+                    {fees.map((fee) => (
+                      <option key={fee.id} value={fee.id}>
+                        {fee.feeName} - ${Number(fee.amount).toFixed(2)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="bulkSemesterId">Semester *</label>
+                  <select id="bulkSemesterId" value={bulkForm.semesterId} onChange={(e) => updateBulkField('semesterId', e.target.value)}>
+                    <option value="">Select a semester</option>
+                    {semesters.map((semester) => (
+                      <option key={semester.id} value={semester.id}>
+                        {semester.semesterName} ({semester.academicYearName})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="bulkDueDate">Due date *</label>
+                  <input id="bulkDueDate" type="date" value={bulkForm.dueDate} onChange={(e) => updateBulkField('dueDate', e.target.value)} />
+                </div>
+              </div>
+              <p className="status-text">Invoice numbers and issue date will be auto-generated for every active student in the selected class.</p>
+              <button className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>
+                {saving ? 'Generating...' : 'Generate Invoices'}
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="invoiceNumber">Invoice number *</label>
+                  <input
+                    id="invoiceNumber"
+                    value={form.invoiceNumber}
+                    onChange={(e) => updateField('invoiceNumber', e.target.value)}
+                    placeholder="e.g. SC-000001"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="studentId">Student *</label>
+                  <select
+                    id="studentId"
+                    value={form.studentId}
+                    onChange={(e) => updateField('studentId', e.target.value)}
+                  >
+                    <option value="">Select a student</option>
+                    {students.map((student) => (
+                      <option key={student.profileId} value={student.profileId}>
+                        {displayName(student.firstName, student.lastName)} ({student.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="feeId">Fee structure *</label>
+                  <select id="feeId" value={form.feeId} onChange={(e) => updateField('feeId', e.target.value)}>
+                    <option value="">Select a fee structure</option>
+                    {fees.map((fee) => (
+                      <option key={fee.id} value={fee.id}>
+                        {fee.feeName} - ${Number(fee.amount).toFixed(2)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="semesterId">Semester *</label>
+                  <select id="semesterId" value={form.semesterId} onChange={(e) => updateField('semesterId', e.target.value)}>
+                    <option value="">Select a semester</option>
+                    {semesters.map((semester) => (
+                      <option key={semester.id} value={semester.id}>
+                        {semester.semesterName} ({semester.academicYearName})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="issueDate">Issue date *</label>
+                  <input id="issueDate" type="date" value={form.issueDate} onChange={(e) => updateField('issueDate', e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="dueDate">Due date *</label>
+                  <input id="dueDate" type="date" value={form.dueDate} onChange={(e) => updateField('dueDate', e.target.value)} />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="totalAmount">Total amount *</label>
+                  <input
+                    id="totalAmount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.totalAmount}
+                    onChange={(e) => updateField('totalAmount', e.target.value)}
+                    placeholder="e.g. 150.00"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="amountPaid">Amount paid</label>
+                  <input
+                    id="amountPaid"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.amountPaid}
+                    onChange={(e) => updateField('amountPaid', e.target.value)}
+                    placeholder="e.g. 0.00"
+                  />
+                </div>
+              </div>
+              <button className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>
+                {saving ? 'Saving...' : editingId ? 'Update Invoice' : 'Save Invoice'}
+              </button>
+            </>
+          )}
         </form>
       )}
 
