@@ -5,6 +5,7 @@ import {
   getGradingCriteria,
   getSchedules,
 } from '../../services/teacherService'
+import { toastError } from '../../utils/sweetAlert'
 
 export default function AssignmentsPage() {
   const [schedules, setSchedules] = useState([])
@@ -13,7 +14,6 @@ export default function AssignmentsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [formError, setFormError] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({
     title: '',
@@ -75,18 +75,17 @@ export default function AssignmentsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setFormError('')
     const selectedCriteria = criteriaForSchedule.find((c) => c.id === Number(form.criteriaId))
     if (!form.title.trim() || !form.scheduleId || !form.criteriaId || !form.dueDate) {
-      setFormError('Please fill in all fields.')
+      toastError('Please fill in all fields.')
       return
     }
     if (!selectedCriteria) {
-      setFormError('Please select a valid grading criteria for this schedule.')
+      toastError('Please select a valid grading criteria for this schedule.')
       return
     }
     if (selectedCriteria.remaining === 0) {
-      setFormError(`The selected criteria has already reached its maximum ${selectedCriteria.attemptCount} attempt(s).`)
+      toastError(`The selected criteria has already reached its maximum ${selectedCriteria.attemptCount} attempt(s).`)
       return
     }
 
@@ -109,7 +108,7 @@ export default function AssignmentsPage() {
       setShowForm(false)
     } catch (err) {
       console.error('Failed to save assignment:', err)
-      setFormError(err.response?.data?.message || err.message || 'Failed to save assignment.')
+      toastError(err.response?.data?.message || err.message || 'Failed to save assignment.')
     } finally {
       setSaving(false)
     }
@@ -126,7 +125,6 @@ export default function AssignmentsPage() {
 
       {showForm && (
         <form className="panel-form" onSubmit={handleSubmit}>
-          {formError && <p className="error-text">{formError}</p>}
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="title">Title</label>

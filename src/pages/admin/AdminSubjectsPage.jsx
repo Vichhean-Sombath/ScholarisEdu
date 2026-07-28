@@ -38,7 +38,6 @@ export default function AdminSubjectsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [formError, setFormError] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(emptyForm)
@@ -59,7 +58,6 @@ export default function AdminSubjectsPage() {
   const resetForm = () => {
     setForm(emptyForm)
     setEditingId(null)
-    setFormError('')
   }
 
   const openNew = () => {
@@ -93,11 +91,10 @@ export default function AdminSubjectsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setFormError('')
 
     const validationError = validate()
     if (validationError) {
-      setFormError(validationError)
+      toastError(validationError)
       return
     }
 
@@ -122,7 +119,7 @@ export default function AdminSubjectsPage() {
       resetForm()
       setShowForm(false)
     } catch (err) {
-      setFormError(err.message || 'Failed to save subject.')
+      toastError(err.message || 'Failed to save subject.')
     } finally {
       setSaving(false)
     }
@@ -153,7 +150,6 @@ export default function AdminSubjectsPage() {
 
       {showForm && (
         <form className="panel-form" onSubmit={handleSubmit}>
-          {formError && <p className="error-text">{formError}</p>}
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="code">Subject code *</label>

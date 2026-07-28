@@ -16,7 +16,6 @@ export default function AdminGradingCriteriaPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [formError, setFormError] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState({
@@ -41,7 +40,6 @@ export default function AdminGradingCriteriaPage() {
   const resetForm = () => {
     setForm({ name: '', subjectId: '', classId: '', weight: '', attemptCount: 1 })
     setEditingId(null)
-    setFormError('')
   }
 
   const openNew = () => {
@@ -63,30 +61,29 @@ export default function AdminGradingCriteriaPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setFormError('')
 
     const hasSubject = form.subjectId !== ''
     const hasClass = form.classId !== ''
 
     if (!form.name.trim() || form.weight === '') {
-      setFormError('Please fill in all required fields.')
+      toastError('Please fill in all required fields.')
       return
     }
 
     if (!hasSubject && !hasClass) {
-      setFormError('Please select at least a subject or a class.')
+      toastError('Please select at least a subject or a class.')
       return
     }
 
     const weight = Number(form.weight)
     if (Number.isNaN(weight) || weight <= 0 || weight > 100) {
-      setFormError('Weight must be between 1 and 100.')
+      toastError('Weight must be between 1 and 100.')
       return
     }
 
     const attemptCount = Number(form.attemptCount)
     if (Number.isNaN(attemptCount) || attemptCount <= 0 || !Number.isInteger(attemptCount)) {
-      setFormError('Attempt count must be a positive whole number.')
+      toastError('Attempt count must be a positive whole number.')
       return
     }
 
@@ -112,7 +109,7 @@ export default function AdminGradingCriteriaPage() {
       resetForm()
       setShowForm(false)
     } catch {
-      setFormError('Failed to save grading criteria.')
+      toastError('Failed to save grading criteria.')
     } finally {
       setSaving(false)
     }
@@ -141,7 +138,6 @@ export default function AdminGradingCriteriaPage() {
 
       {showForm && (
         <form className="panel-form" onSubmit={handleSubmit}>
-          {formError && <p className="error-text">{formError}</p>}
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="name">Criteria Name</label>

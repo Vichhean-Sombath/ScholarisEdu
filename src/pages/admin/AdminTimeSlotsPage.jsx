@@ -39,7 +39,6 @@ export default function AdminTimeSlotsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [formError, setFormError] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(emptyForm)
@@ -60,7 +59,6 @@ export default function AdminTimeSlotsPage() {
   const resetForm = () => {
     setForm(emptyForm)
     setEditingId(null)
-    setFormError('')
   }
 
   const openNew = () => {
@@ -92,11 +90,10 @@ export default function AdminTimeSlotsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setFormError('')
 
     const validationError = validate()
     if (validationError) {
-      setFormError(validationError)
+      toastError(validationError)
       return
     }
 
@@ -120,7 +117,7 @@ export default function AdminTimeSlotsPage() {
       resetForm()
       setShowForm(false)
     } catch (err) {
-      setFormError(err.message || 'Failed to save time slot.')
+      toastError(err.message || 'Failed to save time slot.')
     } finally {
       setSaving(false)
     }
@@ -149,7 +146,6 @@ export default function AdminTimeSlotsPage() {
 
       {showForm && (
         <form className="panel-form" onSubmit={handleSubmit}>
-          {formError && <p className="error-text">{formError}</p>}
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="dayOfWeek">Day of week *</label>

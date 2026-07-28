@@ -45,7 +45,6 @@ export default function AdminSemestersPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [formError, setFormError] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(emptyForm)
@@ -69,7 +68,6 @@ export default function AdminSemestersPage() {
   const resetForm = () => {
     setForm(emptyForm)
     setEditingId(null)
-    setFormError('')
   }
 
   const openNew = () => {
@@ -103,11 +101,10 @@ export default function AdminSemestersPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setFormError('')
 
     const validationError = validate()
     if (validationError) {
-      setFormError(validationError)
+      toastError(validationError)
       return
     }
 
@@ -138,7 +135,7 @@ export default function AdminSemestersPage() {
         err.response?.data?.message ||
         err.message ||
         'Failed to save semester.'
-      setFormError(message)
+      toastError(message)
     } finally {
       setSaving(false)
     }
@@ -173,7 +170,6 @@ export default function AdminSemestersPage() {
 
       {showForm && (
         <form className="panel-form" onSubmit={handleSubmit}>
-          {formError && <p className="error-text">{formError}</p>}
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="academicYearId">Academic year *</label>

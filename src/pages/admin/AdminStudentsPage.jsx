@@ -71,7 +71,6 @@ export default function AdminStudentsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [formError, setFormError] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(emptyForm)
@@ -94,7 +93,6 @@ export default function AdminStudentsPage() {
   const resetForm = () => {
     setForm(emptyForm)
     setEditingId(null)
-    setFormError('')
   }
 
   const openNew = () => {
@@ -142,11 +140,10 @@ export default function AdminStudentsPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setFormError('')
 
     const validationError = validate()
     if (validationError) {
-      setFormError(validationError)
+      toastError(validationError)
       return
     }
 
@@ -190,7 +187,7 @@ export default function AdminStudentsPage() {
         err.response?.data?.message ||
         err.message ||
         'Failed to save student.'
-      setFormError(message)
+      toastError(message)
     } finally {
       setSaving(false)
     }
@@ -259,7 +256,6 @@ export default function AdminStudentsPage() {
 
       {showForm && (
         <form className="panel-form" onSubmit={handleSubmit}>
-          {formError && <p className="error-text">{formError}</p>}
           <h4 style={{ marginTop: 0, marginBottom: 16 }}>{editingId ? 'Edit Student' : 'New Student'}</h4>
 
           <div className="form-row">

@@ -54,7 +54,6 @@ export default function AdminCertificatesPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [formError, setFormError] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [generating, setGenerating] = useState(false)
@@ -84,7 +83,6 @@ export default function AdminCertificatesPage() {
 
   const resetForm = () => {
     setForm(emptyForm)
-    setFormError('')
   }
 
   const openNew = () => {
@@ -104,7 +102,7 @@ export default function AdminCertificatesPage() {
   const generatePDF = async () => {
     const validationError = validate()
     if (validationError) {
-      setFormError(validationError)
+      toastError(validationError)
       return null
     }
 
@@ -123,7 +121,7 @@ export default function AdminCertificatesPage() {
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
       return pdf
     } catch (err) {
-      setFormError(err.message || 'Failed to generate certificate PDF.')
+      toastError(err.message || 'Failed to generate certificate PDF.')
       return null
     } finally {
       setGenerating(false)
@@ -156,11 +154,10 @@ export default function AdminCertificatesPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setFormError('')
 
     const validationError = validate()
     if (validationError) {
-      setFormError(validationError)
+      toastError(validationError)
       return
     }
 
@@ -179,7 +176,7 @@ export default function AdminCertificatesPage() {
       resetForm()
       setShowForm(false)
     } catch (err) {
-      setFormError(err.message || 'Failed to create certificate.')
+      toastError(err.message || 'Failed to create certificate.')
     } finally {
       setSaving(false)
     }
@@ -208,7 +205,6 @@ export default function AdminCertificatesPage() {
 
       {showForm && (
         <form className="panel-form" onSubmit={handleSubmit}>
-          {formError && <p className="error-text">{formError}</p>}
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="studentId">Student *</label>
