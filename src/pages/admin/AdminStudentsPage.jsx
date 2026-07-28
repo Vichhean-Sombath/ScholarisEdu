@@ -165,19 +165,18 @@ export default function AdminStudentsPage() {
 
       if (editingId) {
         const target = students.find((s) => s.id === editingId)
-        const updated = await updateStudent({
+        await updateStudent({
           id: editingId,
           profileId: target?.profileId,
           ...payload,
           password: form.password || undefined,
         })
-        setStudents((prev) => prev.map((s) => (s.id === editingId ? updated : s)))
         toastSuccess('Student updated successfully.')
       } else {
-        const created = await createUser({ ...payload, password: form.password })
-        setStudents((prev) => [...prev, created])
+        await createUser({ ...payload, password: form.password })
         toastSuccess('Student created successfully.')
       }
+      await loadStudents()
       resetForm()
       setShowForm(false)
     } catch (err) {

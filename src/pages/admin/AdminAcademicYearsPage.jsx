@@ -112,14 +112,13 @@ export default function AdminAcademicYearsPage() {
       }
 
       if (editingId) {
-        const updated = await updateAcademicYear({ id: editingId, ...payload })
-        setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        await updateAcademicYear({ id: editingId, ...payload })
         toastSuccess('Academic year updated successfully.')
       } else {
-        const created = await createAcademicYear(payload)
-        setItems((prev) => [...prev, created])
+        await createAcademicYear(payload)
         toastSuccess('Academic year created successfully.')
       }
+      await loadItems()
       resetForm()
       setShowForm(false)
     } catch (err) {

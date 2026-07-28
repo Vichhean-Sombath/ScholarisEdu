@@ -125,14 +125,13 @@ export default function AdminClassEnrollmentsPage() {
       }
 
       if (editingId) {
-        const updated = await updateClassEnrollment({ id: editingId, ...payload })
-        setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        await updateClassEnrollment({ id: editingId, ...payload })
         toastSuccess('Class enrollment updated successfully.')
       } else {
-        const created = await createClassEnrollment(payload)
-        setItems((prev) => [...prev, created])
+        await createClassEnrollment(payload)
         toastSuccess('Class enrollment created successfully.')
       }
+      await loadItems()
       resetForm()
       setShowForm(false)
     } catch (err) {

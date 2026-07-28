@@ -118,14 +118,13 @@ export default function AdminSemestersPage() {
       }
 
       if (editingId) {
-        const updated = await updateSemester({ id: editingId, ...payload })
-        setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        await updateSemester({ id: editingId, ...payload })
         toastSuccess('Semester updated successfully.')
       } else {
-        const created = await createSemester(payload)
-        setItems((prev) => [...prev, created])
+        await createSemester(payload)
         toastSuccess('Semester created successfully.')
       }
+      await loadItems()
       resetForm()
       setShowForm(false)
     } catch (err) {

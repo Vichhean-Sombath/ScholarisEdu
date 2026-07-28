@@ -130,14 +130,13 @@ export default function AdminSchedulesPage() {
       }
 
       if (editingId) {
-        const updated = await updateSchedule({ id: editingId, ...payload })
-        setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        await updateSchedule({ id: editingId, ...payload })
         toastSuccess('Schedule updated successfully.')
       } else {
-        const created = await createSchedule(payload)
-        setItems((prev) => [...prev, created])
+        await createSchedule(payload)
         toastSuccess('Schedule created successfully.')
       }
+      await loadItems()
       resetForm()
       setShowForm(false)
     } catch (err) {

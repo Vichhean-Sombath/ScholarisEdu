@@ -91,13 +91,14 @@ export default function AssignmentsPage() {
 
     setSaving(true)
     try {
-      const created = await createAssignment({
+      await createAssignment({
         ...form,
         scheduleId: Number(form.scheduleId),
         criteriaId: Number(form.criteriaId),
         maxScore: Number(form.maxScore),
       })
-      setAssignments((prev) => [...prev, created])
+      const refreshed = await getAssignments()
+      setAssignments(refreshed)
       setForm({
         title: '',
         scheduleId: '',

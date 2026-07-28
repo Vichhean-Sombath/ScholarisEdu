@@ -89,14 +89,13 @@ export default function TeacherResourcesPage() {
     setSaving(true)
     try {
       if (editingId) {
-        const updated = await updateTeacherResource(editingId, form)
-        setResources((prev) => prev.map((r) => (r.id === editingId ? updated : r)))
+        await updateTeacherResource(editingId, form)
         toastSuccess('Resource updated successfully.')
       } else {
-        const created = await createTeacherResource(form)
-        setResources((prev) => [created, ...prev])
+        await createTeacherResource(form)
         toastSuccess('Resource created successfully.')
       }
+      await loadData()
       resetForm()
     } catch {
       toastError(editingId ? 'Failed to update resource.' : 'Failed to create resource.')

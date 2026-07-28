@@ -98,14 +98,13 @@ export default function AdminGradingCriteriaPage() {
       }
 
       if (editingId) {
-        const updated = await updateGradingCriteria({ id: editingId, ...payload })
-        setCriteria((prev) => prev.map((c) => (c.id === editingId ? updated : c)))
+        await updateGradingCriteria({ id: editingId, ...payload })
         toastSuccess('Grading criteria updated successfully.')
       } else {
-        const created = await createGradingCriteria(payload)
-        setCriteria((prev) => [...prev, created])
+        await createGradingCriteria(payload)
         toastSuccess('Grading criteria created successfully.')
       }
+      await loadItems()
       resetForm()
       setShowForm(false)
     } catch {

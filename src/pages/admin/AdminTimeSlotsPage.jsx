@@ -106,14 +106,13 @@ export default function AdminTimeSlotsPage() {
       }
 
       if (editingId) {
-        const updated = await updateTimeSlot({ id: editingId, ...payload })
-        setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        await updateTimeSlot({ id: editingId, ...payload })
         toastSuccess('Time slot updated successfully.')
       } else {
-        const created = await createTimeSlot(payload)
-        setItems((prev) => [...prev, created])
+        await createTimeSlot(payload)
         toastSuccess('Time slot created successfully.')
       }
+      await loadItems()
       resetForm()
       setShowForm(false)
     } catch (err) {

@@ -242,14 +242,13 @@ export default function AdminInvoicesPage() {
       }
 
       if (editingId) {
-        const updated = await updateInvoice({ id: editingId, ...payload })
-        setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        await updateInvoice({ id: editingId, ...payload })
         toastSuccess('Invoice updated successfully.')
       } else {
-        const created = await createInvoice(payload)
-        setItems((prev) => [...prev, created])
+        await createInvoice(payload)
         toastSuccess('Invoice created successfully.')
       }
+      await loadItems()
       resetForm()
       setShowForm(false)
     } catch (err) {

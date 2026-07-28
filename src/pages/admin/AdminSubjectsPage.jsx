@@ -108,14 +108,13 @@ export default function AdminSubjectsPage() {
       }
 
       if (editingId) {
-        const updated = await updateSubject({ id: editingId, ...payload })
-        setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        await updateSubject({ id: editingId, ...payload })
         toastSuccess('Subject updated successfully.')
       } else {
-        const created = await createSubject(payload)
-        setItems((prev) => [...prev, created])
+        await createSubject(payload)
         toastSuccess('Subject created successfully.')
       }
+      await loadItems()
       resetForm()
       setShowForm(false)
     } catch (err) {

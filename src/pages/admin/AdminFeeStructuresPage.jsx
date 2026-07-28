@@ -124,24 +124,13 @@ export default function AdminFeeStructuresPage() {
       }
 
       if (editingId) {
-        const updated = await updateFeeStructure({ id: editingId, ...payload })
-        setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
-        if (updated.invoicesGenerated > 0) {
-          toastSuccess(`Updated and generated ${updated.invoicesGenerated} invoice(s) for active students.`)
-        } else {
-          toastSuccess('Fee structure updated successfully.')
-        }
+        await updateFeeStructure({ id: editingId, ...payload })
+        toastSuccess('Fee structure updated successfully.')
       } else {
-        const created = await createFeeStructure(payload)
-        setItems((prev) => [...prev, created])
-        if (created.invoicesGenerated > 0) {
-          toastSuccess(`Created and generated ${created.invoicesGenerated} invoice(s) for active students.`)
-        } else if (payload.classId) {
-          toastSuccess('Fee structure created. No active students found to invoice.')
-        } else {
-          toastSuccess('Fee structure created successfully.')
-        }
+        await createFeeStructure(payload)
+        toastSuccess('Fee structure created successfully.')
       }
+      await loadItems()
       resetForm()
       setShowForm(false)
     } catch (err) {

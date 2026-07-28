@@ -167,19 +167,18 @@ export default function AdminTeachersPage() {
 
       if (editingId) {
         const target = teachers.find((t) => t.id === editingId)
-        const updated = await updateTeacher({
+        await updateTeacher({
           id: editingId,
           profileId: target?.profileId,
           ...payload,
           password: form.password || undefined,
         })
-        setTeachers((prev) => prev.map((t) => (t.id === editingId ? updated : t)))
         toastSuccess('Teacher updated successfully.')
       } else {
-        const created = await createUser({ ...payload, password: form.password })
-        setTeachers((prev) => [...prev, created])
+        await createUser({ ...payload, password: form.password })
         toastSuccess('Teacher created successfully.')
       }
+      await loadTeachers()
       resetForm()
       setShowForm(false)
     } catch (err) {

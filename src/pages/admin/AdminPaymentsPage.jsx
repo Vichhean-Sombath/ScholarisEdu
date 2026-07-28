@@ -136,14 +136,13 @@ export default function AdminPaymentsPage() {
       }
 
       if (editingId) {
-        const updated = await updatePayment({ id: editingId, ...payload })
-        setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        await updatePayment({ id: editingId, ...payload })
         toastSuccess('Payment updated successfully.')
       } else {
-        const created = await createPayment(payload)
-        setItems((prev) => [...prev, created])
+        await createPayment(payload)
         toastSuccess('Payment recorded successfully.')
       }
+      await loadItems()
       resetForm()
       setShowForm(false)
     } catch (err) {

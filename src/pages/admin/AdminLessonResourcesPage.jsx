@@ -144,14 +144,13 @@ export default function AdminLessonResourcesPage() {
       }
 
       if (editingId) {
-        const updated = await updateLessonResource({ id: editingId, ...payload })
-        setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        await updateLessonResource({ id: editingId, ...payload })
         toastSuccess('Lesson resource updated successfully.')
       } else {
-        const created = await createLessonResource(payload)
-        setItems((prev) => [...prev, created])
+        await createLessonResource(payload)
         toastSuccess('Lesson resource created successfully.')
       }
+      await loadItems()
       resetForm()
       setShowForm(false)
     } catch (err) {

@@ -163,7 +163,7 @@ export default function AdminCertificatesPage() {
 
     setSaving(true)
     try {
-      const created = await createCertificate({
+      await createCertificate({
         studentId: Number(form.studentId),
         certificateType: form.certificateType,
         templateUsed: form.templateUsed.trim(),
@@ -171,7 +171,7 @@ export default function AdminCertificatesPage() {
         generatedFileUrl: form.generatedFileUrl.trim() || undefined,
         issuedBy: user?.user_id,
       })
-      setItems((prev) => [created, ...prev])
+      await loadItems()
       toastSuccess('Certificate issued successfully.')
       resetForm()
       setShowForm(false)

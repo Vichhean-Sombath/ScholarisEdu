@@ -149,14 +149,13 @@ export default function AdminClassesPage() {
       }
 
       if (editingId) {
-        const updated = await updateClass({ id: editingId, ...payload })
-        setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        await updateClass({ id: editingId, ...payload })
         toastSuccess('Class updated successfully.')
       } else {
-        const created = await createClass(payload)
-        setItems((prev) => [...prev, created])
+        await createClass(payload)
         toastSuccess('Class created successfully.')
       }
+      await loadItems()
       resetForm()
       setShowForm(false)
     } catch (err) {
