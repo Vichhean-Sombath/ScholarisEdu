@@ -13,9 +13,12 @@ export default function Login() {
 
   const validate = () => {
     const next = {}
-    if (!email.trim()) next.email = 'Email is required'
-    else if (!/^\S+@\S+\.\S+$/.test(email)) next.email = 'Enter a valid email'
-    if (!password) next.password = 'Password is required'
+    if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email)) {
+      next.form = 'Please enter a valid email and password.'
+    }
+    if (!password) {
+      next.form = 'Please enter a valid email and password.'
+    }
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -23,6 +26,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setApiError('')
+    setErrors({})
     if (!validate()) return
 
     setSubmitting(true)
@@ -31,10 +35,18 @@ export default function Login() {
       navigate('/')
     } catch (err) {
       const message = err.response?.data?.message || err.message || 'Login failed. Please try again.'
-      setApiError(message)
+      setApiError(normalizeLoginError(message))
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const normalizeLoginError = (message) => {
+    const lower = String(message || '').toLowerCase()
+    if (lower.includes('email') || lower.includes('password') || lower.includes('invalid') || lower.includes('credentials')) {
+      return 'Invalid email or password.'
+    }
+    return message
   }
 
   return (
@@ -61,7 +73,6 @@ export default function Login() {
               placeholder="you@school.edu"
               autoFocus
             />
-            {errors.email && <span className="error-text">{errors.email}</span>}
           </div>
 
           <div className="form-group">
@@ -73,8 +84,9 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
             />
-            {errors.password && <span className="error-text">{errors.password}</span>}
           </div>
+
+          {errors.form && <div className="error-box">{errors.form}</div>}
 
           <button type="submit" className="btn btn-primary" disabled={submitting}>
             {submitting ? 'Signing in…' : 'Sign in'}

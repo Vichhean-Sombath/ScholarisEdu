@@ -32,7 +32,7 @@ export const getStudentInvoices = async () => {
 
 export const getStudentCertificates = async () => {
   const { data } = await api.get('/student/me/certificates')
-  return data.data
+  return data.data || []
 }
 
 export const getStudentResources = async () => {

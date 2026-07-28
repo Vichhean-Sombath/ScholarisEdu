@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import html2canvas from 'html2canvas'
 import jsPDF from 'jspdf'
 import CertificateTemplate from '../../components/CertificateTemplate'
-import { getStudentCertificates } from '../../services/studentService'
+import { getStudentCertificates, getStudentProfile } from '../../services/studentService'
 import { toastError } from '../../utils/sweetAlert'
 import {
   PageHeader,
@@ -64,20 +64,26 @@ function CertificateDownloadButton({ certificate, studentName }) {
 
 export default function StudentCertificatesPage() {
   const [certificates, setCertificates] = useState([])
+  const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  const loadCertificates = () => {
+  const studentName = profile?.fullName || 'Student'
+
+  const loadData = () => {
     setLoading(true)
     setError('')
-    getStudentCertificates()
-      .then((data) => setCertificates(data))
+    Promise.all([getStudentCertificates(), getStudentProfile()])
+      .then(([certificatesData, profileData]) => {
+        setCertificates(certificatesData)
+        setProfile(profileData)
+      })
       .catch(() => setError('Could not load certificates. Please make sure the server is running and try again.'))
       .finally(() => setLoading(false))
   }
 
   useEffect(() => {
-    loadCertificates()
+    loadData()
   }, [])
 
   return (
@@ -87,7 +93,7 @@ export default function StudentCertificatesPage() {
       {loading ? (
         <DashboardSkeleton />
       ) : error ? (
-        <ErrorPanel message={error} onRetry={loadCertificates} />
+        <ErrorPanel message={error} onRetry={loadData} />
       ) : certificates.length === 0 ? (
         <EmptyState message="No certificates issued yet." />
       ) : (
@@ -104,7 +110,7 @@ export default function StudentCertificatesPage() {
                   <td>{formatShortDate(row.issueDate)}</td>
                   <td>{row.issuedBy}</td>
                   <td>
-                    <CertificateDownloadButton certificate={row} studentName={row.studentName || 'Student'} />
+                    <CertificateDownloadButton certificate={row} studentName={studentName} />
                   </td>
                 </tr>
               )}

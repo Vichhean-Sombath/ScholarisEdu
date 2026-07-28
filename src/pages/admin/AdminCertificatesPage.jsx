@@ -57,6 +57,7 @@ export default function AdminCertificatesPage() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [generating, setGenerating] = useState(false)
+  const [editingId, setEditingId] = useState(null)
   const previewRef = useRef(null)
 
   useEffect(() => {
@@ -83,6 +84,7 @@ export default function AdminCertificatesPage() {
 
   const resetForm = () => {
     setForm(emptyForm)
+    setEditingId(null)
   }
 
   const openNew = () => {
@@ -205,6 +207,7 @@ export default function AdminCertificatesPage() {
     const student = students.find((s) => String(s.profileId) === String(item.studentId))
     const name = student ? displayName(student.firstName, student.lastName) : item.studentName || 'Student'
 
+    setEditingId(item.id)
     setForm({
       studentId: String(item.studentId),
       certificateType: item.certificateType,
@@ -225,7 +228,7 @@ export default function AdminCertificatesPage() {
       }
       setShowForm(false)
       resetForm()
-    }, 0)
+    }, 100)
   }
 
   const handleDelete = async (id) => {
