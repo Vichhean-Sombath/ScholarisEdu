@@ -9,6 +9,7 @@ import {
   updateClass,
 } from '../../services/adminService'
 import { getTeachers } from '../../services/userService'
+import { toastSuccess, toastError, confirmDelete } from '../../utils/sweetAlert'
 
 const emptyForm = {
   className: '',
@@ -153,9 +154,11 @@ export default function AdminClassesPage() {
       if (editingId) {
         const updated = await updateClass({ id: editingId, ...payload })
         setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        toastSuccess('Class updated successfully.')
       } else {
         const created = await createClass(payload)
         setItems((prev) => [...prev, created])
+        toastSuccess('Class created successfully.')
       }
       resetForm()
       setShowForm(false)
@@ -167,13 +170,14 @@ export default function AdminClassesPage() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this class?')) return
-    setError('')
+    const confirmed = await confirmDelete('class')
+    if (!confirmed) return
     try {
       await deleteClass(id)
       setItems((prev) => prev.filter((i) => i.id !== id))
+      toastSuccess('Class deleted successfully.')
     } catch (err) {
-      setError(err.message || 'Failed to delete class.')
+      toastError(err.message || 'Failed to delete class.')
     }
   }
 

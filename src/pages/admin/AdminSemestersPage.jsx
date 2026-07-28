@@ -7,6 +7,7 @@ import {
   getSemesters,
   updateSemester,
 } from '../../services/adminService'
+import { toastSuccess, toastError, confirmDelete } from '../../utils/sweetAlert'
 
 const emptyForm = {
   academicYearId: '',
@@ -122,9 +123,11 @@ export default function AdminSemestersPage() {
       if (editingId) {
         const updated = await updateSemester({ id: editingId, ...payload })
         setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        toastSuccess('Semester updated successfully.')
       } else {
         const created = await createSemester(payload)
         setItems((prev) => [...prev, created])
+        toastSuccess('Semester created successfully.')
       }
       resetForm()
       setShowForm(false)
@@ -142,11 +145,12 @@ export default function AdminSemestersPage() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this semester?')) return
-    setError('')
+    const confirmed = await confirmDelete('semester')
+    if (!confirmed) return
     try {
       await deleteSemester(id)
       setItems((prev) => prev.filter((i) => i.id !== id))
+      toastSuccess('Semester deleted successfully.')
     } catch (err) {
       const backendErrors = err.response?.data?.errors
       const message =
@@ -154,7 +158,7 @@ export default function AdminSemestersPage() {
         err.response?.data?.message ||
         err.message ||
         'Failed to delete semester.'
-      setError(message)
+      toastError(message)
     }
   }
 

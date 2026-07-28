@@ -6,6 +6,7 @@ import {
   deleteTeacherResource,
   getSchedules,
 } from '../../services/teacherService'
+import { toastSuccess, toastError, confirmDelete } from '../../utils/sweetAlert'
 
 const RESOURCE_TYPES = ['LessonPlan', 'Homework', 'Syllabus', 'Other']
 
@@ -19,8 +20,6 @@ export default function TeacherResourcesPage() {
   const [schedules, setSchedules] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState({
@@ -33,13 +32,12 @@ export default function TeacherResourcesPage() {
 
   const loadData = () => {
     setLoading(true)
-    setError('')
     Promise.all([getTeacherResources(), getSchedules()])
       .then(([resourcesData, schedulesData]) => {
         setResources(resourcesData)
         setSchedules(schedulesData)
       })
-      .catch(() => setError('Could not load resources. Please make sure the server is running and try again.'))
+      .catch(() => toastError('Could not load resources. Please make sure the server is running and try again.'))
       .finally(() => setLoading(false))
   }
 
@@ -71,38 +69,37 @@ export default function TeacherResourcesPage() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this resource?')) return
+    const confirmed = await confirmDelete('resource')
+    if (!confirmed) return
     try {
       await deleteTeacherResource(id)
       setResources((prev) => prev.filter((r) => r.id !== id))
-      setSuccess('Resource deleted.')
+      toastSuccess('Resource deleted.')
     } catch {
-      setError('Failed to delete resource.')
+      toastError('Failed to delete resource.')
     }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.title.trim() || !form.resourceType) {
-      setError('Please provide a title and resource type.')
+      toastError('Please provide a title and resource type.')
       return
     }
     setSaving(true)
-    setError('')
-    setSuccess('')
     try {
       if (editingId) {
         const updated = await updateTeacherResource(editingId, form)
         setResources((prev) => prev.map((r) => (r.id === editingId ? updated : r)))
-        setSuccess('Resource updated successfully.')
+        toastSuccess('Resource updated successfully.')
       } else {
         const created = await createTeacherResource(form)
         setResources((prev) => [created, ...prev])
-        setSuccess('Resource created successfully.')
+        toastSuccess('Resource created successfully.')
       }
       resetForm()
     } catch {
-      setError(editingId ? 'Failed to update resource.' : 'Failed to create resource.')
+      toastError(editingId ? 'Failed to update resource.' : 'Failed to create resource.')
     } finally {
       setSaving(false)
     }
@@ -123,9 +120,6 @@ export default function TeacherResourcesPage() {
           {showForm ? 'Cancel' : 'New Resource'}
         </button>
       </div>
-
-      {success && <p className="success-text" style={{ marginBottom: 16 }}>{success}</p>}
-      {error && <p className="error-text" style={{ marginBottom: 16 }}>{error}</p>}
 
       {showForm && (
         <form className="panel-form" style={{ marginBottom: 24 }} onSubmit={handleSubmit}>

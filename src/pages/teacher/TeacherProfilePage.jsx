@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { changePassword, getTeacherById, updateTeacherProfile } from '../../services/teacherService'
+import { toastSuccess, toastError } from '../../utils/sweetAlert'
 
 function InfoItem({ label, value }) {
   return (
@@ -17,7 +18,6 @@ export default function TeacherProfilePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [password, setPassword] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
@@ -48,14 +48,12 @@ export default function TeacherProfilePage() {
 
   const handleSave = async () => {
     setSaving(true)
-    setError('')
-    setSuccess('')
     try {
       await updateTeacherProfile(teacherId, profile)
-      setSuccess('Profile updated successfully.')
+      toastSuccess('Profile updated successfully.')
       setIsEditing(false)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update profile. Please try again.')
+      toastError(err.response?.data?.message || 'Failed to update profile. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -63,11 +61,9 @@ export default function TeacherProfilePage() {
 
   const handlePasswordChange = async (e) => {
     e.preventDefault()
-    setError('')
-    setSuccess('')
 
     if (password.newPassword !== password.confirmPassword) {
-      setError('New password and confirmation do not match.')
+      toastError('New password and confirmation do not match.')
       return
     }
 
@@ -77,18 +73,18 @@ export default function TeacherProfilePage() {
     const hasDigit = /\d/.test(password.newPassword)
     const hasSpecial = /[!@#$%^&*(),.?\":{}|<>]/.test(password.newPassword)
     if (!minLength || !hasUpper || !hasLower || !hasDigit || !hasSpecial) {
-      setError('Password must be at least 8 characters with uppercase, lowercase, number, and special character.')
+      toastError('Password must be at least 8 characters with uppercase, lowercase, number, and special character.')
       return
     }
 
     setSaving(true)
     try {
       await changePassword({ currentPassword: password.currentPassword, newPassword: password.newPassword })
-      setSuccess('Password changed successfully.')
+      toastSuccess('Password changed successfully.')
       setPassword({ currentPassword: '', newPassword: '', confirmPassword: '' })
       setShowPasswordForm(false)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to change password. Please try again.')
+      toastError(err.response?.data?.message || 'Failed to change password. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -114,9 +110,6 @@ export default function TeacherProfilePage() {
           {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Edit Profile'}
         </button>
       </div>
-
-      {success && <p className="success-text" style={{ marginBottom: 16 }}>{success}</p>}
-      {isEditing && error && <p className="error-text" style={{ marginBottom: 16 }}>{error}</p>}
 
       <div className="page-header" style={{ marginTop: 16 }}>
         <div />

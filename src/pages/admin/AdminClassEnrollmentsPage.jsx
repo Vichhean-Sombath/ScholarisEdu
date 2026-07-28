@@ -8,6 +8,7 @@ import {
   updateClassEnrollment,
 } from '../../services/adminService'
 import { getStudents } from '../../services/userService'
+import { toastSuccess, toastError, confirmDelete } from '../../utils/sweetAlert'
 
 const STATUSES = ['Active', 'Transferred', 'Withdrawn']
 
@@ -129,9 +130,11 @@ export default function AdminClassEnrollmentsPage() {
       if (editingId) {
         const updated = await updateClassEnrollment({ id: editingId, ...payload })
         setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        toastSuccess('Class enrollment updated successfully.')
       } else {
         const created = await createClassEnrollment(payload)
         setItems((prev) => [...prev, created])
+        toastSuccess('Class enrollment created successfully.')
       }
       resetForm()
       setShowForm(false)
@@ -143,13 +146,14 @@ export default function AdminClassEnrollmentsPage() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this class enrollment?')) return
-    setError('')
+    const confirmed = await confirmDelete('class enrollment')
+    if (!confirmed) return
     try {
       await deleteClassEnrollment(id)
       setItems((prev) => prev.filter((i) => i.id !== id))
+      toastSuccess('Class enrollment deleted successfully.')
     } catch (err) {
-      setError(err.message || 'Failed to delete class enrollment.')
+      toastError(err.message || 'Failed to delete class enrollment.')
     }
   }
 

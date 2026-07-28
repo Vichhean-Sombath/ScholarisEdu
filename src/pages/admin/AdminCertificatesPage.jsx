@@ -6,6 +6,7 @@ import { getStudents } from '../../services/userService'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import CertificateTemplate from '../../components/CertificateTemplate'
+import { toastSuccess, toastError, confirmDelete } from '../../utils/sweetAlert'
 
 const CERTIFICATE_TYPES = ['Completion', 'Transcript', 'Recommendation']
 
@@ -174,6 +175,7 @@ export default function AdminCertificatesPage() {
         issuedBy: user?.user_id,
       })
       setItems((prev) => [created, ...prev])
+      toastSuccess('Certificate issued successfully.')
       resetForm()
       setShowForm(false)
     } catch (err) {
@@ -184,13 +186,14 @@ export default function AdminCertificatesPage() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this certificate?')) return
-    setError('')
+    const confirmed = await confirmDelete('certificate')
+    if (!confirmed) return
     try {
       await deleteCertificate(id)
       setItems((prev) => prev.filter((i) => i.id !== id))
+      toastSuccess('Certificate deleted successfully.')
     } catch (err) {
-      setError(err.message || 'Failed to delete certificate.')
+      toastError(err.message || 'Failed to delete certificate.')
     }
   }
 

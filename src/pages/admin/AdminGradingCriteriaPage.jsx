@@ -7,6 +7,7 @@ import {
   getSubjects,
   updateGradingCriteria,
 } from '../../services/teacherService'
+import { toastSuccess, toastError, confirmDelete } from '../../utils/sweetAlert'
 
 export default function AdminGradingCriteriaPage() {
   const [classes, setClasses] = useState([])
@@ -102,9 +103,11 @@ export default function AdminGradingCriteriaPage() {
       if (editingId) {
         const updated = await updateGradingCriteria({ id: editingId, ...payload })
         setCriteria((prev) => prev.map((c) => (c.id === editingId ? updated : c)))
+        toastSuccess('Grading criteria updated successfully.')
       } else {
         const created = await createGradingCriteria(payload)
         setCriteria((prev) => [...prev, created])
+        toastSuccess('Grading criteria created successfully.')
       }
       resetForm()
       setShowForm(false)
@@ -116,12 +119,14 @@ export default function AdminGradingCriteriaPage() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this grading criteria?')) return
+    const confirmed = await confirmDelete('grading criteria')
+    if (!confirmed) return
     try {
       await deleteGradingCriteria(id)
       setCriteria((prev) => prev.filter((c) => c.id !== id))
+      toastSuccess('Grading criteria deleted successfully.')
     } catch {
-      setError('Failed to delete grading criteria.')
+      toastError('Failed to delete grading criteria.')
     }
   }
 

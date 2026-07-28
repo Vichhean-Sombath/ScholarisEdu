@@ -9,6 +9,7 @@ import {
   updateLessonResource,
 } from '../../services/adminService'
 import { getTeachers } from '../../services/userService'
+import { toastSuccess, toastError, confirmDelete } from '../../utils/sweetAlert'
 
 const emptyForm = {
   teacherId: '',
@@ -148,9 +149,11 @@ export default function AdminLessonResourcesPage() {
       if (editingId) {
         const updated = await updateLessonResource({ id: editingId, ...payload })
         setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        toastSuccess('Lesson resource updated successfully.')
       } else {
         const created = await createLessonResource(payload)
         setItems((prev) => [...prev, created])
+        toastSuccess('Lesson resource created successfully.')
       }
       resetForm()
       setShowForm(false)
@@ -168,11 +171,12 @@ export default function AdminLessonResourcesPage() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this lesson resource?')) return
-    setError('')
+    const confirmed = await confirmDelete('lesson resource')
+    if (!confirmed) return
     try {
       await deleteLessonResource(id)
       setItems((prev) => prev.filter((i) => i.id !== id))
+      toastSuccess('Lesson resource deleted successfully.')
     } catch (err) {
       const backendErrors = err.response?.data?.errors
       const message =
@@ -180,7 +184,7 @@ export default function AdminLessonResourcesPage() {
         err.response?.data?.message ||
         err.message ||
         'Failed to delete lesson resource.'
-      setError(message)
+      toastError(message)
     }
   }
 

@@ -72,6 +72,11 @@ export const payInvoiceWithBakong = async (invoiceId) => {
   return data.data
 }
 
+export const verifyBakongPayment = async (md5) => {
+  const { data } = await api.post('/payment/bakong/verify', { md5 })
+  return data.data
+}
+
 export const recordStudentPayment = async (invoiceId) => {
   const { data } = await api.post('/payment/stripe/record', { invoice_id: invoiceId })
   return data.data

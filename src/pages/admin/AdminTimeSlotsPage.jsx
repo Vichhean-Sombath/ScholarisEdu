@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AlertIcon, EmptyIcon } from '../../components/Icons'
 import { createTimeSlot, deleteTimeSlot, getTimeSlots, updateTimeSlot } from '../../services/adminService'
+import { toastSuccess, toastError, confirmDelete } from '../../utils/sweetAlert'
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
@@ -110,9 +111,11 @@ export default function AdminTimeSlotsPage() {
       if (editingId) {
         const updated = await updateTimeSlot({ id: editingId, ...payload })
         setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        toastSuccess('Time slot updated successfully.')
       } else {
         const created = await createTimeSlot(payload)
         setItems((prev) => [...prev, created])
+        toastSuccess('Time slot created successfully.')
       }
       resetForm()
       setShowForm(false)
@@ -124,13 +127,14 @@ export default function AdminTimeSlotsPage() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this time slot?')) return
-    setError('')
+    const confirmed = await confirmDelete('time slot')
+    if (!confirmed) return
     try {
       await deleteTimeSlot(id)
       setItems((prev) => prev.filter((i) => i.id !== id))
+      toastSuccess('Time slot deleted successfully.')
     } catch (err) {
-      setError(err.message || 'Failed to delete time slot.')
+      toastError(err.message || 'Failed to delete time slot.')
     }
   }
 

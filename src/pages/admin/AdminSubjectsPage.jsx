@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AlertIcon, EmptyIcon } from '../../components/Icons'
 import { createSubject, deleteSubject, getSubjects, updateSubject } from '../../services/adminService'
+import { toastSuccess, toastError, confirmDelete } from '../../utils/sweetAlert'
 
 const emptyForm = {
   code: '',
@@ -112,9 +113,11 @@ export default function AdminSubjectsPage() {
       if (editingId) {
         const updated = await updateSubject({ id: editingId, ...payload })
         setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        toastSuccess('Subject updated successfully.')
       } else {
         const created = await createSubject(payload)
         setItems((prev) => [...prev, created])
+        toastSuccess('Subject created successfully.')
       }
       resetForm()
       setShowForm(false)
@@ -126,13 +129,14 @@ export default function AdminSubjectsPage() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this subject?')) return
-    setError('')
+    const confirmed = await confirmDelete('subject')
+    if (!confirmed) return
     try {
       await deleteSubject(id)
       setItems((prev) => prev.filter((i) => i.id !== id))
+      toastSuccess('Subject deleted successfully.')
     } catch (err) {
-      setError(err.message || 'Failed to delete subject.')
+      toastError(err.message || 'Failed to delete subject.')
     }
   }
 

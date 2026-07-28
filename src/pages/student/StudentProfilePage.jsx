@@ -8,6 +8,7 @@ import {
   DataTable,
   formatShortDate,
 } from './studentUtils'
+import { toastSuccess, toastError } from '../../utils/sweetAlert'
 
 function InfoItem({ label, value }) {
   return (
@@ -22,7 +23,6 @@ export default function StudentProfilePage() {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [saving, setSaving] = useState(false)
   const [showPasswordForm, setShowPasswordForm] = useState(false)
   const [password, setPassword] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
@@ -42,11 +42,9 @@ export default function StudentProfilePage() {
 
   const handlePasswordChange = async (e) => {
     e.preventDefault()
-    setError('')
-    setSuccess('')
 
     if (password.newPassword !== password.confirmPassword) {
-      setError('New password and confirmation do not match.')
+      toastError('New password and confirmation do not match.')
       return
     }
 
@@ -56,18 +54,18 @@ export default function StudentProfilePage() {
     const hasDigit = /\d/.test(password.newPassword)
     const hasSpecial = /[!@#$%^&*(),.?\":{}|<>]/.test(password.newPassword)
     if (!minLength || !hasUpper || !hasLower || !hasDigit || !hasSpecial) {
-      setError('Password must be at least 8 characters with uppercase, lowercase, number, and special character.')
+      toastError('Password must be at least 8 characters with uppercase, lowercase, number, and special character.')
       return
     }
 
     setSaving(true)
     try {
       await changePassword({ currentPassword: password.currentPassword, newPassword: password.newPassword })
-      setSuccess('Password changed successfully.')
+      toastSuccess('Password changed successfully.')
       setPassword({ currentPassword: '', newPassword: '', confirmPassword: '' })
       setShowPasswordForm(false)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to change password. Please try again.')
+      toastError(err.response?.data?.message || 'Failed to change password. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -76,9 +74,6 @@ export default function StudentProfilePage() {
   return (
     <div className="page-section">
       <PageHeader title="My Profile" subtitle="Your personal information and emergency contacts." />
-
-      {success && !loading && <p className="success-text" style={{ marginBottom: 16 }}>{success}</p>}
-      {error && !loading && <p className="error-text" style={{ marginBottom: 16 }}>{error}</p>}
 
       <div className="page-header" style={{ marginTop: 16 }}>
         <div />

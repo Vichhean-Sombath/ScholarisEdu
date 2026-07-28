@@ -10,6 +10,7 @@ import {
   updateSchedule,
 } from '../../services/adminService'
 import { getTeachers } from '../../services/userService'
+import { toastSuccess, toastError, confirmDelete } from '../../utils/sweetAlert'
 
 const emptyForm = {
   classId: '',
@@ -134,9 +135,11 @@ export default function AdminSchedulesPage() {
       if (editingId) {
         const updated = await updateSchedule({ id: editingId, ...payload })
         setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        toastSuccess('Schedule updated successfully.')
       } else {
         const created = await createSchedule(payload)
         setItems((prev) => [...prev, created])
+        toastSuccess('Schedule created successfully.')
       }
       resetForm()
       setShowForm(false)
@@ -154,11 +157,12 @@ export default function AdminSchedulesPage() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this schedule?')) return
-    setError('')
+    const confirmed = await confirmDelete('schedule')
+    if (!confirmed) return
     try {
       await deleteSchedule(id)
       setItems((prev) => prev.filter((i) => i.id !== id))
+      toastSuccess('Schedule deleted successfully.')
     } catch (err) {
       const backendErrors = err.response?.data?.errors
       const message =
@@ -166,7 +170,7 @@ export default function AdminSchedulesPage() {
         err.response?.data?.message ||
         err.message ||
         'Failed to delete schedule.'
-      setError(message)
+      toastError(message)
     }
   }
 

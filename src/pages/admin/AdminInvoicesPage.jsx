@@ -11,6 +11,7 @@ import {
   updateInvoice,
 } from '../../services/adminService'
 import { getStudents } from '../../services/userService'
+import { toastSuccess, toastError, confirmDelete } from '../../utils/sweetAlert'
 
 const emptyForm = {
   invoiceNumber: '',
@@ -246,9 +247,11 @@ export default function AdminInvoicesPage() {
       if (editingId) {
         const updated = await updateInvoice({ id: editingId, ...payload })
         setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        toastSuccess('Invoice updated successfully.')
       } else {
         const created = await createInvoice(payload)
         setItems((prev) => [...prev, created])
+        toastSuccess('Invoice created successfully.')
       }
       resetForm()
       setShowForm(false)
@@ -260,13 +263,14 @@ export default function AdminInvoicesPage() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this invoice?')) return
-    setError('')
+    const confirmed = await confirmDelete('invoice')
+    if (!confirmed) return
     try {
       await deleteInvoice(id)
       setItems((prev) => prev.filter((i) => i.id !== id))
+      toastSuccess('Invoice deleted successfully.')
     } catch (err) {
-      setError(err.message || 'Failed to delete invoice.')
+      toastError(err.message || 'Failed to delete invoice.')
     }
   }
 

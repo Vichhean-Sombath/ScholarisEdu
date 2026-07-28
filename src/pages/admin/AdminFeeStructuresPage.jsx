@@ -8,6 +8,7 @@ import {
   getSemesters,
   updateFeeStructure,
 } from '../../services/adminService'
+import { toastSuccess, toastError, confirmDelete } from '../../utils/sweetAlert'
 
 const emptyForm = {
   feeName: '',
@@ -48,7 +49,6 @@ export default function AdminFeeStructuresPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [formError, setFormError] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(emptyForm)
@@ -74,7 +74,6 @@ export default function AdminFeeStructuresPage() {
     setForm(emptyForm)
     setEditingId(null)
     setFormError('')
-    setSuccessMessage('')
   }
 
   const openNew = () => {
@@ -131,22 +130,23 @@ export default function AdminFeeStructuresPage() {
         const updated = await updateFeeStructure({ id: editingId, ...payload })
         setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
         if (updated.invoicesGenerated > 0) {
-          setSuccessMessage(`Updated and generated ${updated.invoicesGenerated} invoice(s) for active students.`)
+          toastSuccess(`Updated and generated ${updated.invoicesGenerated} invoice(s) for active students.`)
+        } else {
+          toastSuccess('Fee structure updated successfully.')
         }
       } else {
         const created = await createFeeStructure(payload)
         setItems((prev) => [...prev, created])
         if (created.invoicesGenerated > 0) {
-          setSuccessMessage(`Created and generated ${created.invoicesGenerated} invoice(s) for active students.`)
+          toastSuccess(`Created and generated ${created.invoicesGenerated} invoice(s) for active students.`)
         } else if (payload.classId) {
-          setSuccessMessage('Fee structure created. No active students found to invoice.')
+          toastSuccess('Fee structure created. No active students found to invoice.')
         } else {
-          setSuccessMessage('Fee structure created.')
+          toastSuccess('Fee structure created successfully.')
         }
       }
       resetForm()
       setShowForm(false)
-      setTimeout(() => setSuccessMessage(''), 5000)
     } catch (err) {
       setFormError(err.message || 'Failed to save fee structure.')
     } finally {
@@ -155,13 +155,14 @@ export default function AdminFeeStructuresPage() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this fee structure?')) return
-    setError('')
+    const confirmed = await confirmDelete('fee structure')
+    if (!confirmed) return
     try {
       await deleteFeeStructure(id)
       setItems((prev) => prev.filter((i) => i.id !== id))
+      toastSuccess('Fee structure deleted successfully.')
     } catch (err) {
-      setError(err.message || 'Failed to delete fee structure.')
+      toastError(err.message || 'Failed to delete fee structure.')
     }
   }
 
@@ -173,10 +174,6 @@ export default function AdminFeeStructuresPage() {
           {showForm ? 'Cancel' : 'New Fee Structure'}
         </button>
       </div>
-
-      {successMessage && (
-        <p className="success-text" style={{ marginBottom: 16 }}>{successMessage}</p>
-      )}
 
       {showForm && (
         <form className="panel-form" onSubmit={handleSubmit}>

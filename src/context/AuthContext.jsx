@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { getCurrentUser, getToken, loginUser, logoutUser, registerUser } from '../services/authService'
+import { confirmLogout, toastSuccess } from '../utils/sweetAlert'
 
 const AuthContext = createContext(null)
 
@@ -27,8 +28,11 @@ export const AuthProvider = ({ children }) => {
   }
 
   const logout = async () => {
+    const confirmed = await confirmLogout()
+    if (!confirmed) return
     await logoutUser()
     setUser(null)
+    toastSuccess('Logged out successfully.')
   }
 
   return (

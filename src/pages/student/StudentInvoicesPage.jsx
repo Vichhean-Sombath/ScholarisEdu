@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
-import { getStudentInvoices, payInvoiceWithStripe, payInvoiceWithBakong, verifyStripePayment } from '../../services/studentService'
+import {
+  getStudentInvoices,
+  payInvoiceWithStripe,
+  payInvoiceWithBakong,
+  verifyStripePayment,
+  verifyBakongPayment,
+} from '../../services/studentService'
 import {
   PageHeader,
   DashboardSkeleton,
@@ -15,13 +21,80 @@ import {
   formatShortDate,
   Icon,
 } from './studentUtils'
+import { toastSuccess } from '../../utils/sweetAlert'
 
-function BakongQrModal({ open, onClose, qrString, invoiceNumber, amount }) {
-  if (!open) return null
+function BakongQrModal({ open, onClose, qrString, md5, invoiceNumber, amount, onPaid }) {
+  const [checking, setChecking] = useState(false)
+  const [status, setStatus] = useState('pending')
+
+  useEffect(() => {
+    if (!open || !md5) return
+
+    setStatus('pending')
+    let attempts = 0
+    const maxAttempts = 100 // ~5 minutes at 3s interval
+
+    const check = async () => {
+      if (!open) return
+      attempts += 1
+      try {
+        const result = await verifyBakongPayment(md5)
+        if (result?.paid) {
+          setStatus('paid')
+          onPaid()
+          return
+        }
+        if (result?.expired) {
+          setStatus('expired')
+          return
+        }
+      } catch (err) {
+        // polling errors are non-fatal
+      }
+
+      if (attempts < maxAttempts && open) {
+        timeoutId = setTimeout(check, 3000)
+      }
+    }
+
+    let timeoutId = setTimeout(check, 3000)
+    return () => clearTimeout(timeoutId)
+  }, [open, md5, onPaid])
+
+  const handleManualCheck = async () => {
+    if (!md5 || checking) return
+    setChecking(true)
+    try {
+      const result = await verifyBakongPayment(md5)
+      if (result?.paid) {
+        setStatus('paid')
+        onPaid()
+      } else if (result?.expired) {
+        setStatus('expired')
+      } else {
+        setStatus('pending')
+      }
+    } catch (err) {
+      setStatus('error')
+    } finally {
+      setChecking(false)
+    }
+  }
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(qrString).then(() => alert('KHQR code copied to clipboard'))
+    navigator.clipboard.writeText(qrString).then(() => toastSuccess('KHQR code copied to clipboard'))
   }
+
+  if (!open) return null
+
+  const statusMessage =
+    status === 'paid'
+      ? 'Payment confirmed!'
+      : status === 'expired'
+      ? 'This QR code has expired. Please generate a new one.'
+      : status === 'error'
+      ? 'Could not check payment status.'
+      : 'Waiting for payment...'
 
   return (
     <div
@@ -65,13 +138,26 @@ function BakongQrModal({ open, onClose, qrString, invoiceNumber, amount }) {
           <QRCodeSVG value={qrString} size={200} />
         </div>
 
-        <p style={{ fontSize: 12, color: '#64748b', marginBottom: 16 }}>
+        <p style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>
           Scan this KHQR code with your Bakong app to complete payment.
         </p>
+        <p
+          style={{
+            fontSize: 13,
+            fontWeight: 500,
+            marginBottom: 16,
+            color: status === 'paid' ? '#10b981' : status === 'expired' ? '#ef4444' : '#64748b',
+          }}
+        >
+          {checking ? 'Checking payment status...' : statusMessage}
+        </p>
 
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button className="btn btn-secondary" onClick={handleCopy}>
             Copy KHQR
+          </button>
+          <button className="btn btn-secondary" onClick={handleManualCheck} disabled={checking || status === 'paid' || status === 'expired'}>
+            Check Payment
           </button>
           <button className="btn btn-primary" onClick={onClose}>
             Close
@@ -89,7 +175,7 @@ export default function StudentInvoicesPage() {
   const [error, setError] = useState('')
   const [payingInvoiceId, setPayingInvoiceId] = useState(null)
   const [verifyingSessionId, setVerifyingSessionId] = useState(null)
-  const [bakongModal, setBakongModal] = useState({ open: false, qrString: '', invoiceNumber: '', amount: 0 })
+  const [bakongModal, setBakongModal] = useState({ open: false, qrString: '', md5: '', invoiceNumber: '', amount: 0 })
 
   const loadInvoices = () => {
     setLoading(true)
@@ -158,10 +244,12 @@ export default function StudentInvoicesPage() {
         result?.khqr ||
         result?.qr ||
         (typeof result === 'string' ? result : '')
-      if (qrString) {
+      const md5 = result?.md5 || ''
+      if (qrString && md5) {
         setBakongModal({
           open: true,
           qrString,
+          md5,
           invoiceNumber: invoice.invoiceNumber,
           amount: invoice.balanceDue || invoice.totalAmount || 0,
         })
@@ -186,8 +274,13 @@ export default function StudentInvoicesPage() {
         open={bakongModal.open}
         onClose={() => setBakongModal({ ...bakongModal, open: false })}
         qrString={bakongModal.qrString}
+        md5={bakongModal.md5}
         invoiceNumber={bakongModal.invoiceNumber}
         amount={bakongModal.amount}
+        onPaid={() => {
+          setBakongModal({ ...bakongModal, open: false })
+          loadInvoices()
+        }}
       />
 
       {loading ? (

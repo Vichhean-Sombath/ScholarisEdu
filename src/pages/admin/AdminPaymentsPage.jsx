@@ -8,6 +8,7 @@ import {
   getPayments,
   updatePayment,
 } from '../../services/adminService'
+import { toastSuccess, toastError, confirmDelete } from '../../utils/sweetAlert'
 
 const PAYMENT_METHODS = [
   { value: 'stripe', label: 'Stripe' },
@@ -140,9 +141,11 @@ export default function AdminPaymentsPage() {
       if (editingId) {
         const updated = await updatePayment({ id: editingId, ...payload })
         setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        toastSuccess('Payment updated successfully.')
       } else {
         const created = await createPayment(payload)
         setItems((prev) => [...prev, created])
+        toastSuccess('Payment recorded successfully.')
       }
       resetForm()
       setShowForm(false)
@@ -154,13 +157,14 @@ export default function AdminPaymentsPage() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this payment?')) return
-    setError('')
+    const confirmed = await confirmDelete('payment')
+    if (!confirmed) return
     try {
       await deletePayment(id)
       setItems((prev) => prev.filter((i) => i.id !== id))
+      toastSuccess('Payment deleted successfully.')
     } catch (err) {
-      setError(err.message || 'Failed to delete payment.')
+      toastError(err.message || 'Failed to delete payment.')
     }
   }
 

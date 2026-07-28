@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { AlertIcon, EmptyIcon } from '../../components/Icons'
 import { createUser, disableUser, enableUser, getTeachers, updateTeacher } from '../../services/userService'
+import { toastSuccess, toastError } from '../../utils/sweetAlert'
 
 const STATUSES = ['Active', 'Inactive']
 
@@ -176,9 +177,11 @@ export default function AdminTeachersPage() {
           password: form.password || undefined,
         })
         setTeachers((prev) => prev.map((t) => (t.id === editingId ? updated : t)))
+        toastSuccess('Teacher updated successfully.')
       } else {
         const created = await createUser({ ...payload, password: form.password })
         setTeachers((prev) => [...prev, created])
+        toastSuccess('Teacher created successfully.')
       }
       resetForm()
       setShowForm(false)
@@ -196,13 +199,13 @@ export default function AdminTeachersPage() {
   }
 
   const handleToggleStatus = async (teacher) => {
-    setError('')
     if (String(teacher.id) === String(currentUser?.user_id)) {
-      setError('You cannot change your own account status.')
+      toastError('You cannot change your own account status.')
       return
     }
     try {
-      if (teacher.status === 'Active') {
+      const wasActive = teacher.status === 'Active'
+      if (wasActive) {
         await disableUser(teacher.id)
       } else {
         await enableUser(teacher.id)
@@ -210,8 +213,9 @@ export default function AdminTeachersPage() {
       setTeachers((prev) =>
         prev.map((t) => (t.id === teacher.id ? { ...t, status: t.status === 'Active' ? 'Inactive' : 'Active' } : t))
       )
+      toastSuccess(`Teacher ${wasActive ? 'disabled' : 'enabled'} successfully.`)
     } catch (err) {
-      setError(err.message || 'Failed to update teacher status.')
+      toastError(err.message || 'Failed to update teacher status.')
     }
   }
 

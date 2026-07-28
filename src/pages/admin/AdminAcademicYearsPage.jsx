@@ -6,6 +6,7 @@ import {
   getAcademicYears,
   updateAcademicYear,
 } from '../../services/adminService'
+import { toastSuccess, toastError, confirmDelete } from '../../utils/sweetAlert'
 
 const emptyForm = {
   yearName: '',
@@ -116,9 +117,11 @@ export default function AdminAcademicYearsPage() {
       if (editingId) {
         const updated = await updateAcademicYear({ id: editingId, ...payload })
         setItems((prev) => prev.map((i) => (i.id === editingId ? updated : i)))
+        toastSuccess('Academic year updated successfully.')
       } else {
         const created = await createAcademicYear(payload)
         setItems((prev) => [...prev, created])
+        toastSuccess('Academic year created successfully.')
       }
       resetForm()
       setShowForm(false)
@@ -136,11 +139,12 @@ export default function AdminAcademicYearsPage() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this academic year?')) return
-    setError('')
+    const confirmed = await confirmDelete('academic year')
+    if (!confirmed) return
     try {
       await deleteAcademicYear(id)
       setItems((prev) => prev.filter((i) => i.id !== id))
+      toastSuccess('Academic year deleted successfully.')
     } catch (err) {
       const backendErrors = err.response?.data?.errors
       const message =
@@ -148,7 +152,7 @@ export default function AdminAcademicYearsPage() {
         err.response?.data?.message ||
         err.message ||
         'Failed to delete academic year.'
-      setError(message)
+      toastError(message)
     }
   }
 
