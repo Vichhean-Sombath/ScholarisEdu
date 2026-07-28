@@ -155,6 +155,11 @@ export default function AdminCertificatesPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    if (editingId) {
+      toastError('Certificate records cannot be edited. Delete and recreate if needed.')
+      return
+    }
+
     const validationError = validate()
     if (validationError) {
       toastError(validationError)
@@ -180,6 +185,47 @@ export default function AdminCertificatesPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleView = (item) => {
+    setForm({
+      studentId: String(item.studentId),
+      certificateType: item.certificateType,
+      templateUsed: item.templateUsed,
+      issueDate: item.issueDate,
+      generatedFileUrl: item.generatedFileUrl || '',
+      schoolName: emptyForm.schoolName,
+      signature: emptyForm.signature,
+    })
+    setEditingId(item.id)
+    setShowForm(true)
+  }
+
+  const handleDownloadFromRow = async (item) => {
+    const student = students.find((s) => String(s.profileId) === String(item.studentId))
+    const name = student ? displayName(student.firstName, student.lastName) : item.studentName || 'Student'
+
+    setForm({
+      studentId: String(item.studentId),
+      certificateType: item.certificateType,
+      templateUsed: item.templateUsed,
+      issueDate: item.issueDate,
+      generatedFileUrl: item.generatedFileUrl || '',
+      schoolName: emptyForm.schoolName,
+      signature: emptyForm.signature,
+    })
+
+    // Let the preview render, then generate PDF.
+    setShowForm(true)
+    setTimeout(async () => {
+      const pdf = await generatePDF()
+      if (pdf) {
+        const fileName = `${name.replace(/\s+/g, '_')}_${item.certificateType}_certificate.pdf`
+        pdf.save(fileName)
+      }
+      setShowForm(false)
+      resetForm()
+    }, 0)
   }
 
   const handleDelete = async (id) => {
@@ -299,11 +345,13 @@ export default function AdminCertificatesPage() {
 
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <button className="btn btn-secondary" style={{ width: 'auto' }} type="button" onClick={handleDownload} disabled={generating}>
-              {generating ? 'Generating...' : 'Download PDF'}
+              {generating ? 'Generating...' : editingId ? 'Download PDF' : 'Preview & Download'}
             </button>
-            <button className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>
-              {saving ? 'Saving...' : 'Issue Certificate'}
-            </button>
+            {!editingId && (
+              <button className="btn btn-primary" style={{ width: 'auto' }} disabled={saving}>
+                {saving ? 'Saving...' : 'Issue Certificate'}
+              </button>
+            )}
           </div>
         </form>
       )}
@@ -345,6 +393,12 @@ export default function AdminCertificatesPage() {
                   </td>
                   <td>
                     <div className="action-buttons">
+                      <button className="btn btn-sm btn-secondary" onClick={() => handleView(item)}>
+                        View
+                      </button>
+                      <button className="btn btn-sm btn-secondary" onClick={() => handleDownloadFromRow(item)}>
+                        Download
+                      </button>
                       <button className="btn btn-sm btn-danger" onClick={() => handleDelete(item.id)}>
                         Delete
                       </button>
