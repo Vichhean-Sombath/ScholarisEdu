@@ -2,13 +2,13 @@
 
 Web client for the Scholaris school management platform.
 
-**Repository:** https://github.com/rezio23/ScholarisEdu.git
-**Live demo:** https://scholaris-educate.vercel.app/login
+**Repository:** https://github.com/rezio23/ScholarisClient.git
+**Live project:** https://scholaris-educate.vercel.app/
 
-## Related Repositories
+## Related Projects
 
-- **Scholaris API Server** — https://github.com/rezio23/ScholarisAPI.git
-- **ScholarisMobile** — https://github.com/rezio23/ScholarisMobile.git
+- **Scholaris API Server** — Backend API that powers both the web client and mobile app. (https://github.com/rezio23/Scholaris.git)
+- **ScholarisMobile** — Native Android app for students to scan attendance QR codes. (https://github.com/rezio23/ScholarisMobile.git)
 
 ## Overview
 
@@ -68,7 +68,7 @@ ScholarisPage/
 1. Clone the repository and install dependencies:
 
    ```bash
-   git clone https://github.com/rezio23/ScholarisEdu.git
+   git clone https://github.com/rezio23/ScholarisClient.git
    cd ScholarisPage
    npm install
    ```
@@ -129,7 +129,3 @@ You can also deploy the contents of the `dist/` folder to any static hosting pro
 |-----------------|--------------------------------------|----------------------------------|
 | `VITE_API_URL`  | Base URL of the Scholaris API server | `https://api.scholaris.edu`      |
 
-## Related Projects
-
-- **ScholarisMobile** — Android app for students to scan attendance QR codes. (https://github.com/rezio23/ScholarisMobile.git)
-- **Scholaris API Server** — Backend API that powers both the web client and mobile app. (https://github.com/rezio23/ScholarisAPI.git)
