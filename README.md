@@ -79,10 +79,10 @@ ScholarisPage/
    cp .env.example .env
    ```
 
-3. Update `VITE_API_URL` in `.env` to point to your Scholaris API backend:
+3. Update `API_URL` in `.env` to point to your Scholaris API backend:
 
    ```env
-   VITE_API_URL=http://localhost:3000
+   API_URL=http://localhost:3000
    ```
 
 ## Development
@@ -127,5 +127,5 @@ You can also deploy the contents of the `dist/` folder to any static hosting pro
 
 | Variable        | Description                          | Example                          |
 |-----------------|--------------------------------------|----------------------------------|
-| `VITE_API_URL`  | Base URL of the Scholaris API server | `https://api.scholaris.edu`      |
+| `API_URL`       | Base URL of the Scholaris API server | `https://api.scholaris.edu`      |
 
