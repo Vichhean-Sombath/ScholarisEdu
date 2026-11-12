@@ -10,6 +10,7 @@ import {
 } from '../../services/adminService'
 import { getTeachers } from '../../services/userService'
 import { toastSuccess, toastError, confirmDelete } from '../../utils/sweetAlert'
+import { getApiErrorMessage } from '../../utils/apiError'
 
 const emptyForm = {
   teacherId: '',
@@ -104,32 +105,8 @@ export default function AdminLessonResourcesPage() {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
-  const validate = () => {
-    if (!form.teacherId) return 'Teacher is required.'
-    if (!form.title.trim()) return 'Title is required.'
-    if (form.title.length > 150) return 'Title must not exceed 150 characters.'
-    if (!form.resourceType) return 'Resource type is required.'
-    if (form.fileUrl) {
-      try {
-        const parsed = new URL(form.fileUrl)
-        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-          return 'File URL must use http:// or https://.'
-        }
-      } catch {
-        return 'File URL format is invalid.'
-      }
-    }
-    return ''
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    const validationError = validate()
-    if (validationError) {
-      toastError(validationError)
-      return
-    }
 
     setSaving(true)
     try {
@@ -154,13 +131,7 @@ export default function AdminLessonResourcesPage() {
       resetForm()
       setShowForm(false)
     } catch (err) {
-      const backendErrors = err.response?.data?.errors
-      const message =
-        (Array.isArray(backendErrors) && backendErrors.join(', ')) ||
-        err.response?.data?.message ||
-        err.message ||
-        'Failed to save lesson resource.'
-      toastError(message)
+      toastError(getApiErrorMessage(err, 'Failed to save lesson resource.'))
     } finally {
       setSaving(false)
     }
@@ -174,13 +145,7 @@ export default function AdminLessonResourcesPage() {
       setItems((prev) => prev.filter((i) => i.id !== id))
       toastSuccess('Lesson resource deleted successfully.')
     } catch (err) {
-      const backendErrors = err.response?.data?.errors
-      const message =
-        (Array.isArray(backendErrors) && backendErrors.join(', ')) ||
-        err.response?.data?.message ||
-        err.message ||
-        'Failed to delete lesson resource.'
-      toastError(message)
+      toastError(getApiErrorMessage(err, 'Failed to delete lesson resource.'))
     }
   }
 
@@ -194,7 +159,7 @@ export default function AdminLessonResourcesPage() {
       </div>
 
       {showForm && (
-        <form className="panel-form" onSubmit={handleSubmit}>
+        <form className="panel-form" onSubmit={handleSubmit} noValidate>
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="teacherId">Teacher *</label>
@@ -226,13 +191,14 @@ export default function AdminLessonResourcesPage() {
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label htmlFor="scheduleId">Schedule (optional)</label>
+              <label htmlFor="scheduleId">Schedule *</label>
               <select
                 id="scheduleId"
                 value={form.scheduleId}
                 onChange={(e) => updateField('scheduleId', e.target.value)}
+                required
               >
-                <option value="">None</option>
+                <option value="">Select a schedule</option>
                 {schedules.map((schedule) => (
                   <option key={schedule.id} value={schedule.id}>
                     {schedule.className} · {schedule.subjectName} · {schedule.timeSlotLabel}
@@ -274,13 +240,14 @@ export default function AdminLessonResourcesPage() {
           </div>
           <div className="form-row">
             <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-              <label htmlFor="fileUrl">File URL</label>
+              <label htmlFor="fileUrl">Resource URL *</label>
               <input
                 id="fileUrl"
                 type="url"
                 value={form.fileUrl}
                 onChange={(e) => updateField('fileUrl', e.target.value)}
                 placeholder="https://example.com/resource.pdf"
+                required
               />
             </div>
           </div>

@@ -316,11 +316,11 @@ export const getTeacherResources = async () => {
 
 export const createTeacherResource = async (resource) => {
   const { data } = await api.post('/lesson_resource/create', {
-    schedule_id: resource.scheduleId || null,
-    title: resource.title,
-    description: resource.description,
+    schedule_id: resource.scheduleId ? Number(resource.scheduleId) : undefined,
+    title: resource.title.trim(),
+    description: resource.description.trim() || undefined,
     resource_type: resource.resourceType,
-    file_url: resource.fileUrl,
+    file_url: resource.fileUrl.trim() || undefined,
     upload_date: resource.uploadDate || new Date().toISOString().slice(0, 10),
   })
   const item = data.data
@@ -339,11 +339,11 @@ export const createTeacherResource = async (resource) => {
 
 export const updateTeacherResource = async (id, resource) => {
   const { data } = await api.put(`/lesson_resource/update/${id}`, {
-    schedule_id: resource.scheduleId || null,
-    title: resource.title,
-    description: resource.description,
+    schedule_id: resource.scheduleId ? Number(resource.scheduleId) : undefined,
+    title: resource.title.trim(),
+    description: resource.description.trim() || undefined,
     resource_type: resource.resourceType,
-    file_url: resource.fileUrl,
+    file_url: resource.fileUrl.trim() || undefined,
     upload_date: resource.uploadDate,
   })
   const item = data.data

@@ -7,6 +7,7 @@ import {
   getSchedules,
 } from '../../services/teacherService'
 import { toastSuccess, toastError, confirmDelete } from '../../utils/sweetAlert'
+import { getApiErrorMessage } from '../../utils/apiError'
 
 const RESOURCE_TYPES = ['LessonPlan', 'Homework', 'Syllabus', 'Other']
 
@@ -82,10 +83,6 @@ export default function TeacherResourcesPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.title.trim() || !form.resourceType) {
-      toastError('Please provide a title and resource type.')
-      return
-    }
     setSaving(true)
     try {
       if (editingId) {
@@ -97,8 +94,11 @@ export default function TeacherResourcesPage() {
       }
       await loadData()
       resetForm()
-    } catch {
-      toastError(editingId ? 'Failed to update resource.' : 'Failed to create resource.')
+    } catch (err) {
+      toastError(getApiErrorMessage(
+        err,
+        editingId ? 'Failed to update resource.' : 'Failed to create resource.'
+      ))
     } finally {
       setSaving(false)
     }
@@ -121,7 +121,7 @@ export default function TeacherResourcesPage() {
       </div>
 
       {showForm && (
-        <form className="panel-form" style={{ marginBottom: 24 }} onSubmit={handleSubmit}>
+        <form className="panel-form" style={{ marginBottom: 24 }} onSubmit={handleSubmit} noValidate>
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="title">Title</label>
@@ -145,13 +145,14 @@ export default function TeacherResourcesPage() {
               </select>
             </div>
             <div className="form-group">
-              <label htmlFor="scheduleId">Schedule (optional)</label>
+              <label htmlFor="scheduleId">Schedule *</label>
               <select
                 id="scheduleId"
                 value={form.scheduleId}
                 onChange={(e) => setForm((f) => ({ ...f, scheduleId: e.target.value }))}
+                required
               >
-                <option value="">None</option>
+                <option value="">Select a schedule</option>
                 {scheduleOptions.map((s) => (
                   <option key={s.id} value={s.id}>{s.label}</option>
                 ))}
@@ -160,12 +161,14 @@ export default function TeacherResourcesPage() {
           </div>
           <div className="form-row">
             <div className="form-group" style={{ flex: 1 }}>
-              <label htmlFor="fileUrl">File URL</label>
+              <label htmlFor="fileUrl">Resource URL *</label>
               <input
                 id="fileUrl"
+                type="url"
                 value={form.fileUrl}
                 onChange={(e) => setForm((f) => ({ ...f, fileUrl: e.target.value }))}
                 placeholder="https://..."
+                required
               />
             </div>
           </div>

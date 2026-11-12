@@ -536,7 +536,7 @@ export const getLessonResources = async () => {
 
 export const createLessonResource = async (resource) => {
   const { data } = await api.post('/lesson_resource/create', {
-    teacher_id: Number(resource.teacherId),
+    teacher_id: resource.teacherId ? Number(resource.teacherId) : undefined,
     schedule_id: resource.scheduleId ? Number(resource.scheduleId) : undefined,
     title: resource.title,
     description: resource.description || undefined,
@@ -549,7 +549,7 @@ export const createLessonResource = async (resource) => {
 
 export const updateLessonResource = async (resource) => {
   const { data } = await api.put(`/lesson_resource/update/${resource.id}`, {
-    teacher_id: Number(resource.teacherId),
+    teacher_id: resource.teacherId ? Number(resource.teacherId) : undefined,
     schedule_id: resource.scheduleId ? Number(resource.scheduleId) : undefined,
     title: resource.title,
     description: resource.description || undefined,
