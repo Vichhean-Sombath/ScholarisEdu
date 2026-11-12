@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
@@ -41,18 +41,6 @@ const GraduationCapIcon = () => (
 const UsersIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
 )
-
-function passwordStrength(password) {
-  if (!password) return { score: 0, label: '' }
-  let score = 0
-  if (password.length >= 8) score += 1
-  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score += 1
-  if (/\d/.test(password)) score += 1
-  if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) score += 1
-  const labels = ['Weak', 'Fair', 'Good', 'Strong']
-  const colors = ['#ef4444', '#f59e0b', '#4a90d9', '#16a34a']
-  return { score, label: labels[score - 1] || 'Weak', color: colors[score - 1] || '#ef4444' }
-}
 
 function todayInputValue() {
   return new Date().toISOString().split('T')[0]
@@ -99,8 +87,6 @@ export default function Register() {
   const [submitting, setSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
-
-  const strength = useMemo(() => passwordStrength(form.password), [form.password])
 
   const update = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -238,22 +224,6 @@ export default function Register() {
                   {showPassword ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
               </div>
-              {form.password && !errors.password && (
-                <div className="password-strength">
-                  <div className="strength-bar">
-                    {[1, 2, 3, 4].map((i) => (
-                      <span
-                        key={i}
-                        className={`strength-segment ${strength.score >= i ? 'filled' : ''}`}
-                        style={{ '--strength-color': strength.color }}
-                      />
-                    ))}
-                  </div>
-                  <span className="strength-label" style={{ color: strength.color }}>
-                    {strength.label}
-                  </span>
-                </div>
-              )}
             </Field>
 
             <Field id="confirmPassword" label="Confirm password" error={errors.confirmPassword} required>

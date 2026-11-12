@@ -100,6 +100,7 @@ export const getScores = async (assessmentId) => {
     assessmentId: item.assessment_id,
     studentId: item.student_id,
     score: item.score ?? '',
+    isPublished: Boolean(item.is_published),
   }))
 }
 
@@ -108,6 +109,7 @@ export const saveScore = async (score) => {
     assessment_id: score.assessmentId,
     student_id: score.studentId,
     score: Number(score.score),
+    is_published: Boolean(score.isPublished),
   }
 
   if (score.id) {
@@ -117,6 +119,7 @@ export const saveScore = async (score) => {
       assessmentId: payload.assessment_id,
       studentId: payload.student_id,
       score: payload.score,
+      isPublished: payload.is_published,
     }
   }
 
@@ -126,6 +129,7 @@ export const saveScore = async (score) => {
     assessmentId: payload.assessment_id,
     studentId: payload.student_id,
     score: payload.score,
+    isPublished: payload.is_published,
   }
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { QRCodeSVG } from 'qrcode.react'
 import {
@@ -21,15 +21,25 @@ import {
   formatShortDate,
   Icon,
 } from './studentUtils'
-import { toastSuccess } from '../../utils/sweetAlert'
+import { showSuccess, toastSuccess } from '../../utils/sweetAlert'
 
 function BakongQrModal({ open, onClose, qrString, md5, invoiceNumber, amount, onPaid }) {
   const [checking, setChecking] = useState(false)
   const [status, setStatus] = useState('pending')
+  const paymentHandled = useRef(false)
+
+  const handlePaymentConfirmed = () => {
+    if (paymentHandled.current) return
+
+    paymentHandled.current = true
+    setStatus('paid')
+    onPaid()
+  }
 
   useEffect(() => {
     if (!open || !md5) return
 
+    paymentHandled.current = false
     setStatus('pending')
     let attempts = 0
     const maxAttempts = 100 // ~5 minutes at 3s interval
@@ -40,8 +50,7 @@ function BakongQrModal({ open, onClose, qrString, md5, invoiceNumber, amount, on
       try {
         const result = await verifyBakongPayment(md5)
         if (result?.paid) {
-          setStatus('paid')
-          onPaid()
+          handlePaymentConfirmed()
           return
         }
         if (result?.expired) {
@@ -67,8 +76,7 @@ function BakongQrModal({ open, onClose, qrString, md5, invoiceNumber, amount, on
     try {
       const result = await verifyBakongPayment(md5)
       if (result?.paid) {
-        setStatus('paid')
-        onPaid()
+        handlePaymentConfirmed()
       } else if (result?.expired) {
         setStatus('expired')
       } else {
@@ -204,6 +212,7 @@ export default function StudentInvoicesPage() {
 
     verifyStripePayment(sessionId)
       .then(() => {
+        showSuccess('Payment successful!', 'Your payment has been confirmed.')
         loadInvoices()
       })
       .catch((err) => {
@@ -279,6 +288,7 @@ export default function StudentInvoicesPage() {
         amount={bakongModal.amount}
         onPaid={() => {
           setBakongModal({ ...bakongModal, open: false })
+          showSuccess('Payment successful!', 'Your payment has been confirmed.')
           loadInvoices()
         }}
       />

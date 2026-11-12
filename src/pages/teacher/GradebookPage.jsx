@@ -7,7 +7,7 @@ export default function GradebookPage() {
   const [students, setStudents] = useState([])
   const [scores, setScores] = useState([])
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+  const [savingAction, setSavingAction] = useState('')
   const [error, setError] = useState('')
   const [saveError, setSaveError] = useState('')
   const [saveSuccess, setSaveSuccess] = useState('')
@@ -93,7 +93,7 @@ export default function GradebookPage() {
     setSaveSuccess('')
   }
 
-  const handleSave = async () => {
+  const handleSave = async (publish = false) => {
     setSaveError('')
     setSaveSuccess('')
     if (!selectedAssignmentId) {
@@ -111,18 +111,20 @@ export default function GradebookPage() {
       return
     }
 
-    setSaving(true)
+    setSavingAction(publish ? 'publish' : 'draft')
     try {
       const updated = await Promise.all(
         classStudents.map(async (student) => {
           const value = scoreFor(student.id)
           if (value === '') return null
           const id = scoreIdFor(student.id)
+          const existing = scores.find((score) => score.studentId === student.id)
           return saveScore({
             id,
             assessmentId: Number(selectedAssignmentId),
             studentId: student.id,
             score: value,
+            isPublished: publish || Boolean(existing?.isPublished),
           })
         })
       )
@@ -133,11 +135,19 @@ export default function GradebookPage() {
         })
         return Array.from(map.values())
       })
-      setSaveSuccess('Scores saved successfully.')
+      setSaveSuccess(
+        publish
+          ? 'Grades published successfully. Students can now view them.'
+          : 'Scores saved as drafts.'
+      )
     } catch {
-      setSaveError('Failed to save scores. Please make sure the server is running and try again.')
+      setSaveError(
+        publish
+          ? 'Failed to publish grades. Please make sure the server is running and try again.'
+          : 'Failed to save scores. Please make sure the server is running and try again.'
+      )
     } finally {
-      setSaving(false)
+      setSavingAction('')
     }
   }
 
@@ -145,14 +155,24 @@ export default function GradebookPage() {
     <div className="page-section">
       <div className="section-header">
         <h3>Gradebook</h3>
-        <button
-          className="btn btn-primary"
-          style={{ width: 'auto' }}
-          onClick={handleSave}
-          disabled={saving || !selectedAssignmentId}
-        >
-          {saving ? 'Saving...' : 'Save Scores'}
-        </button>
+        <div className="action-buttons">
+          <button
+            className="btn btn-secondary"
+            style={{ width: 'auto' }}
+            onClick={() => handleSave(false)}
+            disabled={Boolean(savingAction) || !selectedAssignmentId}
+          >
+            {savingAction === 'draft' ? 'Saving...' : 'Save Draft'}
+          </button>
+          <button
+            className="btn btn-primary"
+            style={{ width: 'auto' }}
+            onClick={() => handleSave(true)}
+            disabled={Boolean(savingAction) || !selectedAssignmentId}
+          >
+            {savingAction === 'publish' ? 'Publishing...' : 'Publish Grades'}
+          </button>
+        </div>
       </div>
 
       {saveSuccess && <p className="status-text" style={{ color: 'var(--success)', marginBottom: 12 }}>{saveSuccess}</p>}
@@ -213,6 +233,7 @@ export default function GradebookPage() {
                 <th>Email</th>
                 <th>Assignment</th>
                 <th style={{ width: 160 }}>Score</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -232,6 +253,15 @@ export default function GradebookPage() {
                       placeholder={`/${selectedAssignment?.maxScore || 100}`}
                       className="score-input"
                     />
+                  </td>
+                  <td>
+                    {scoreFor(student.id) === '' ? (
+                      <span className="meta">â€”</span>
+                    ) : (
+                      <span className={`pill ${scores.find((score) => score.studentId === student.id)?.isPublished ? 'paid' : 'draft'}`}>
+                        {scores.find((score) => score.studentId === student.id)?.isPublished ? 'Published' : 'Draft'}
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))}

@@ -104,7 +104,8 @@ export default function AdminGradingCriteriaPage() {
         await createGradingCriteria(payload)
         toastSuccess('Grading criteria created successfully.')
       }
-      await loadItems()
+      const criteriaData = await getGradingCriteria()
+      setCriteria(criteriaData)
       resetForm()
       setShowForm(false)
     } catch {
